@@ -1,0 +1,183 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Paleta StudyTrack (spec sección 6.2).
+ * Los valores crudos viven en :root como --st-*; el @theme inline los expone
+ * como utilidades de Tailwind (bg-brand, text-ink, border-locked, etc.)
+ * además de mapear los tokens semánticos de shadcn/ui.
+ */
+@theme inline {
+  /* Tokens semánticos shadcn */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Tokens de marca StudyTrack */
+  --color-brand: var(--st-green);
+  --color-brand-dark: var(--st-green-dark);
+  --color-brand-light: var(--st-green-light);
+  --color-accent-blue: var(--st-blue);
+  --color-accent-purple: var(--st-purple);
+  --color-accent-yellow: var(--st-yellow);
+  --color-accent-orange: var(--st-orange);
+  --color-error: var(--st-error);
+  --color-success: var(--st-success);
+  --color-surface: var(--st-surface);
+  --color-ink: var(--st-text);
+  --color-ink-muted: var(--st-text-secondary);
+  --color-locked: var(--st-locked);
+
+  /* Tipografía: Plus Jakarta Sans (headings) + Inter (body), via next/font */
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Radios: botones 16px (radius-lg), cards 24px (radius-2xl) */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --radius-4xl: 2.5rem;
+}
+
+:root {
+  /* Paleta cruda StudyTrack (6.2) */
+  --st-green: #37c871;
+  --st-green-dark: #199b50;
+  --st-green-light: #ddfbea;
+  --st-blue: #2f80ed;
+  --st-purple: #8b5cf6;
+  --st-yellow: #ffd166;
+  --st-orange: #ff8a3d;
+  --st-error: #ef4444;
+  --st-success: #22c55e;
+  --st-bg: #f7faf8;
+  --st-surface: #ffffff;
+  --st-text: #16251c;
+  --st-text-secondary: #5f6f66;
+  --st-border: #e3ece6;
+  --st-locked: #d1d8d3;
+
+  /* Mapeo semántico shadcn → StudyTrack */
+  --background: var(--st-bg);
+  --foreground: var(--st-text);
+  --card: var(--st-surface);
+  --card-foreground: var(--st-text);
+  --popover: var(--st-surface);
+  --popover-foreground: var(--st-text);
+  --primary: var(--st-green);
+  --primary-foreground: #ffffff;
+  --secondary: var(--st-green-light);
+  --secondary-foreground: var(--st-green-dark);
+  --muted: #edf4ef;
+  --muted-foreground: var(--st-text-secondary);
+  --accent: var(--st-green-light);
+  --accent-foreground: var(--st-green-dark);
+  --destructive: var(--st-error);
+  --border: var(--st-border);
+  --input: var(--st-border);
+  --ring: var(--st-green);
+  --chart-1: var(--st-green);
+  --chart-2: var(--st-blue);
+  --chart-3: var(--st-purple);
+  --chart-4: var(--st-yellow);
+  --chart-5: var(--st-orange);
+  --radius: 1rem;
+  --sidebar: var(--st-surface);
+  --sidebar-foreground: var(--st-text);
+  --sidebar-primary: var(--st-green);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--st-green-light);
+  --sidebar-accent-foreground: var(--st-green-dark);
+  --sidebar-border: var(--st-border);
+  --sidebar-ring: var(--st-green);
+}
+
+/* La app es light-first; el modo dark mantiene la marca sobre fondos oscuros. */
+.dark {
+  --background: #0f1a14;
+  --foreground: #f0f7f2;
+  --card: #16251c;
+  --card-foreground: #f0f7f2;
+  --popover: #16251c;
+  --popover-foreground: #f0f7f2;
+  --primary: var(--st-green);
+  --primary-foreground: #0f1a14;
+  --secondary: #1e3327;
+  --secondary-foreground: #ddfbea;
+  --muted: #1e3327;
+  --muted-foreground: #9db5a7;
+  --accent: #1e3327;
+  --accent-foreground: #ddfbea;
+  --destructive: var(--st-error);
+  --border: #ffffff1a;
+  --input: #ffffff26;
+  --ring: var(--st-green);
+  --chart-1: var(--st-green);
+  --chart-2: var(--st-blue);
+  --chart-3: var(--st-purple);
+  --chart-4: var(--st-yellow);
+  --chart-5: var(--st-orange);
+  --sidebar: #16251c;
+  --sidebar-foreground: #f0f7f2;
+  --sidebar-primary: var(--st-green);
+  --sidebar-primary-foreground: #0f1a14;
+  --sidebar-accent: #1e3327;
+  --sidebar-accent-foreground: #ddfbea;
+  --sidebar-border: #ffffff1a;
+  --sidebar-ring: var(--st-green);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-bold;
+  }
+}
