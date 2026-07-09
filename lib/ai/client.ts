@@ -13,6 +13,11 @@ export function getOpenAIClient(): OpenAI {
   return openaiClient;
 }
 
+function usesMaxCompletionTokens(model: string): boolean {
+  const normalized = model.toLowerCase();
+  return normalized.startsWith("gpt-5") || normalized.startsWith("o");
+}
+
 export interface ChatJsonOptions<T> extends JsonRetryOptions<T> {
   system: string;
   user: string;
@@ -28,13 +33,18 @@ export async function chatJsonCompletion<T>(
 ): Promise<T> {
   const client = getOpenAIClient();
   const model = getOpenAIModel();
+  const tokenLimit = options.maxTokens;
 
   return callModelWithJsonRetry(
     async () => {
       const response = await client.chat.completions.create({
         model,
         temperature: options.temperature ?? 0.4,
-        max_tokens: options.maxTokens,
+        ...(tokenLimit
+          ? usesMaxCompletionTokens(model)
+            ? { max_completion_tokens: tokenLimit }
+            : { max_tokens: tokenLimit }
+          : {}),
         response_format: { type: "json_object" },
         messages: [
           {

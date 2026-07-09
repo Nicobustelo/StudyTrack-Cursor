@@ -8,6 +8,8 @@ type PipelineProgress = {
   stage?: string;
   hasMore?: boolean;
   message?: string;
+  lessonsTotal?: number;
+  lessonsCompleted?: number;
 };
 
 function loadEnvFile(filename: string) {
@@ -31,32 +33,6 @@ function loadEnvFile(filename: string) {
     }
     process.env[key] ||= value;
   }
-}
-
-function makeSyntheticPdf(text: string) {
-  const escapePdfText = (value: string) =>
-    value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
-  const stream = `BT /F1 18 Tf 72 720 Td (${escapePdfText(text)}) Tj ET`;
-  const objects = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-    `<< /Length ${Buffer.byteLength(stream, "utf8")} >>\nstream\n${stream}\nendstream`,
-  ];
-
-  let pdf = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  objects.forEach((object, index) => {
-    offsets.push(pdf.length);
-    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
-  });
-  const xref = pdf.length;
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  pdf += `${offsets.map((offset) => `${String(offset).padStart(10, "0")} 00000 n `).join("\n")}\n`;
-  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
-
-  return Buffer.from(pdf);
 }
 
 const sampleNotesPath = resolve(
@@ -180,14 +156,6 @@ async function main() {
         body: readFileSync(parkinPdfPath),
       },
       {
-        fileName: "economia-sintetico.pdf",
-        fileType: "application/pdf",
-        sourceKind: "pdf",
-        body: makeSyntheticPdf(
-          "Oferta agregada demanda agregada PIB real nivel de precios equilibrio macroeconomico politica fiscal politica monetaria consumo inversion exportaciones importaciones expectativas salarios costos productividad.",
-        ),
-      },
-      {
         fileName: "resumen-macro.txt",
         fileType: "text/plain",
         sourceKind: "notes",
@@ -234,15 +202,21 @@ async function main() {
       throw new Error(`Expected chunk_sources, got ${started.stage}`);
     }
 
-    let finalStage: string | undefined = started.stage;
-    for (let i = 0; i < 4; i++) {
-      if (finalStage !== "chunk_sources") break;
-      const progress = await postPipelineStep(baseUrl, "next", activeExamId, userId);
-      finalStage = progress.stage;
+    const stepLog: PipelineProgress[] = [started];
+    let current = started;
+    for (let i = 0; i < 80 && current.hasMore; i++) {
+      current = await postPipelineStep(baseUrl, "next", activeExamId, userId);
+      stepLog.push(current);
     }
 
-    if (finalStage === "chunk_sources") {
-      throw new Error("Not all material sources were chunked");
+    if (current.hasMore) {
+      throw new Error(
+        `Pipeline did not finish within 80 steps. Last stage: ${current.stage}`,
+      );
+    }
+
+    if (current.stage !== "completed") {
+      throw new Error(`Expected completed, got ${current.stage}`);
     }
 
     const { data: chunkedSources, error: chunkError } = await supabase
@@ -268,7 +242,75 @@ async function main() {
       throw new Error(`Material QA failed: ${JSON.stringify(failed, null, 2)}`);
     }
 
-    console.log(JSON.stringify({ ok: true, baseUrl, finalStage, summary }, null, 2));
+    const { data: finalState, error: finalStateError } = await supabase
+      .from("exams")
+      .select(
+        "id, status, readiness_score, topics(id), study_units(id), lessons(id, content), quizzes(id), questions(id)",
+      )
+      .eq("id", activeExamId)
+      .single();
+    if (finalStateError || !finalState) {
+      throw finalStateError ?? new Error("No final exam state returned");
+    }
+
+    const topics = Array.isArray(finalState.topics) ? finalState.topics.length : 0;
+    const units = Array.isArray(finalState.study_units)
+      ? finalState.study_units.length
+      : 0;
+    const lessons = Array.isArray(finalState.lessons)
+      ? finalState.lessons.length
+      : 0;
+    const readyLessons = Array.isArray(finalState.lessons)
+      ? finalState.lessons.filter((lesson) => Boolean(lesson.content)).length
+      : 0;
+    const quizzes = Array.isArray(finalState.quizzes) ? finalState.quizzes.length : 0;
+    const questions = Array.isArray(finalState.questions)
+      ? finalState.questions.length
+      : 0;
+
+    const finalSummary = {
+      status: finalState.status,
+      readiness_score: finalState.readiness_score,
+      topics,
+      units,
+      lessons,
+      readyLessons,
+      quizzes,
+      questions,
+    };
+
+    if (
+      finalState.status !== "ready" ||
+      topics < 1 ||
+      units < 1 ||
+      lessons < 1 ||
+      readyLessons !== lessons ||
+      quizzes < 1 ||
+      questions < 1
+    ) {
+      throw new Error(`Final QA failed: ${JSON.stringify(finalSummary, null, 2)}`);
+    }
+
+    console.log(
+      JSON.stringify(
+        {
+          ok: true,
+          baseUrl,
+          finalStage: current.stage,
+          steps: stepLog.map((step, index) => ({
+            index,
+            stage: step.stage,
+            message: step.message,
+            lessonsCompleted: step.lessonsCompleted,
+            lessonsTotal: step.lessonsTotal,
+          })),
+          sources: summary,
+          finalSummary,
+        },
+        null,
+        2,
+      ),
+    );
   } finally {
     if (examId) {
       await supabase.from("exams").delete().eq("id", examId);

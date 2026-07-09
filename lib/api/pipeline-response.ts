@@ -15,12 +15,21 @@ export function pipelineErrorResponse(
   const statusCode = isPipelineError(error) ? error.statusCode : 500;
   const message =
     error instanceof Error ? error.message : "Error interno del pipeline";
+  const stage = isPipelineError(error) ? error.stage : context.stage;
+
+  console.error("Analysis pipeline failed", {
+    route: context.route,
+    examId: context.examId,
+    stage,
+    statusCode,
+    message,
+  });
 
   if (context.userId) {
     capturePipelineFailure(context.userId, {
       exam_id: context.examId,
       route: context.route,
-      stage: isPipelineError(error) ? error.stage : context.stage,
+      stage,
       status_code: statusCode,
       error_message: message,
     });
@@ -29,7 +38,7 @@ export function pipelineErrorResponse(
   return NextResponse.json(
     {
       error: message,
-      stage: isPipelineError(error) ? error.stage : context.stage,
+      stage,
     },
     { status: statusCode },
   );
