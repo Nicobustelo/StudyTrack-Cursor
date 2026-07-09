@@ -67,13 +67,13 @@ export function PhoneMockup({ className }: { className?: string }) {
   return (
     <div className={cn("relative mx-auto w-[290px]", className)}>
       {/* Chip flotante: countdown */}
-      <div className="absolute -left-4 top-12 z-30 flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[11px] font-bold text-white shadow-soft motion-safe:animate-float">
+      <div className="absolute -left-5 top-4 z-30 flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[11px] font-bold text-white shadow-soft motion-safe:animate-float">
         <Timer className="size-3.5 text-accent-orange" />
         Faltan 8 días
       </div>
 
       {/* Tarjeta flotante: preparación */}
-      <div className="absolute -right-4 top-36 z-30 w-40 rounded-2xl bg-surface p-3 shadow-soft ring-1 ring-border motion-safe:animate-float-delayed">
+      <div className="absolute -right-7 top-40 z-30 w-40 rounded-2xl bg-surface p-3 shadow-soft ring-1 ring-border motion-safe:animate-float-delayed">
         <div className="flex items-center gap-1.5">
           <TrendingUp className="size-3.5 text-brand" />
           <p className="text-[11px] font-bold text-ink-muted">Preparación</p>
@@ -87,7 +87,7 @@ export function PhoneMockup({ className }: { className?: string }) {
       </div>
 
       {/* Tarjeta flotante: próximo paso */}
-      <div className="absolute -left-5 bottom-24 z-30 w-52 rounded-2xl bg-surface p-3 shadow-soft ring-1 ring-border motion-safe:animate-float">
+      <div className="absolute -left-7 bottom-20 z-30 w-48 rounded-2xl bg-surface p-3 shadow-soft ring-1 ring-border motion-safe:animate-float">
         <div className="flex items-start gap-2.5">
           <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-blue/12 text-accent-blue">
             <Target className="size-4" />

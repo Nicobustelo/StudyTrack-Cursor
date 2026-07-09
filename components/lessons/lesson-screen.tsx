@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MobileShell } from "@/components/layout/mobile-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Markdown } from "@/components/ui/markdown";
 import {
   ANALYTICS_EVENTS,
   captureClientEvent,
@@ -265,14 +266,8 @@ export function LessonScreen({
 
           {content ? (
             <Card>
-              <CardContent className="prose prose-sm max-w-none pt-6 text-ink">
-                {content.split("\n").map((paragraph, i) =>
-                  paragraph.trim() ? (
-                    <p key={i} className="mb-3 last:mb-0 leading-relaxed">
-                      {paragraph}
-                    </p>
-                  ) : null,
-                )}
+              <CardContent className="pt-6">
+                <Markdown>{content}</Markdown>
               </CardContent>
             </Card>
           ) : null}

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Markdown } from "@/components/ui/markdown";
 import { cn } from "@/lib/utils";
 
 interface ExerciseFeedbackProps {
@@ -33,7 +34,7 @@ export function ExerciseFeedback({
         >
           {isCorrect ? "¡Correcto!" : "Incorrecto"}
         </p>
-        <p className="text-sm leading-relaxed text-ink-muted">{explanation}</p>
+        <Markdown className="text-sm text-ink-muted">{explanation}</Markdown>
         <Button size="lg" className="w-full" onClick={onContinue}>
           {continueLabel}
         </Button>
