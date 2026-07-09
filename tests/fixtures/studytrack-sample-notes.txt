@@ -1,0 +1,5 @@
+Oferta y demanda agregada: la demanda agregada resume el gasto planeado de hogares, empresas, gobierno y sector externo a distintos niveles de precios. Si el nivel de precios sube, el poder adquisitivo cae y la cantidad demandada de PIB real tiende a bajar.
+
+La oferta agregada de corto plazo depende de costos, salarios nominales, productividad y expectativas. Un shock de costos puede desplazar la oferta agregada hacia la izquierda y generar menor producción con mayor inflación.
+
+Para estudiar este capítulo conviene practicar: identificar desplazamientos de DA/OA, explicar equilibrio macroeconómico, diferenciar corto y largo plazo, y resolver casos de política fiscal o monetaria.

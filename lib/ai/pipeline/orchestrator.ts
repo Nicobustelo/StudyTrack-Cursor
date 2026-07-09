@@ -9,6 +9,7 @@ import {
   normalizeSubscores,
 } from "../domain/similarity";
 import {
+  extractTextFromStorageSource,
   isUsableRawText,
   resolveSourceText,
   sourceNeedsStorageExtraction,
@@ -78,7 +79,7 @@ export async function detectPipelineStage(
 ): Promise<PipelineStage> {
   const { data: sources } = await supabase
     .from("study_sources")
-    .select("id, raw_text, storage_path, processing_status")
+    .select("id, raw_text, storage_path, file_name, file_type, processing_status")
     .eq("exam_id", examId);
 
   for (const source of sources ?? []) {
@@ -159,7 +160,7 @@ async function findSourceNeedingChunks(
 ) {
   const { data: sources } = await supabase
     .from("study_sources")
-    .select("id, raw_text, storage_path, processing_status, created_at")
+    .select("id, raw_text, storage_path, file_name, file_type, processing_status, created_at")
     .eq("exam_id", examId)
     .order("created_at", { ascending: true });
 
@@ -197,19 +198,24 @@ async function stageChunkSources(
     );
   }
 
-  if (needsStorage) {
-    await supabase
-      .from("study_sources")
-      .update({ processing_status: "error" })
-      .eq("id", source.id);
-    throw new PipelineError(
-      "La extracción desde Storage aún no está implementada para esta fuente. Usá 'Pegar texto' o esperá al worker de archivos.",
-      400,
-      "chunk_sources",
-    );
+  let text = resolveSourceText(source);
+  if (!text && needsStorage) {
+    try {
+      text = await extractTextFromStorageSource(supabase, source);
+    } catch (error) {
+      await supabase
+        .from("study_sources")
+        .update({ processing_status: "error" })
+        .eq("id", source.id);
+      throw new PipelineError(
+        error instanceof Error
+          ? error.message
+          : "No pudimos leer este archivo. Probá subirlo como PDF con texto seleccionable o pegá el contenido manualmente.",
+        400,
+        "chunk_sources",
+      );
+    }
   }
-
-  const text = resolveSourceText(source);
   if (!text) {
     throw new PipelineError(
       "No hay texto usable en el material subido.",
@@ -246,7 +252,7 @@ async function stageChunkSources(
 
   await supabase
     .from("study_sources")
-    .update({ processing_status: "completed" })
+    .update({ raw_text: text, processing_status: "completed" })
     .eq("id", source.id);
 
   const hasMoreSources = allSources.some((s) => {

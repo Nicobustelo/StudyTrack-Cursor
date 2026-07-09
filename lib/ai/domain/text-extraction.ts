@@ -1,8 +1,12 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { CHUNK_DEFAULTS } from "../constants";
 
 export interface StudySourceTextInput {
   raw_text?: string | null;
   storage_path?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
 }
 
 /**
@@ -12,7 +16,7 @@ export interface StudySourceTextInput {
 export function extractTextFromRawText(
   rawText: string | null | undefined,
 ): string {
-  return (rawText ?? "").replace(/\r\n/g, "\n").trim();
+  return normalizeExtractedText(rawText ?? "");
 }
 
 export function isUsableRawText(rawText: string | null | undefined): boolean {
@@ -41,4 +45,87 @@ export function resolveSourceText(source: StudySourceTextInput): string | null {
     return extractTextFromRawText(source.raw_text);
   }
   return null;
+}
+
+function normalizeExtractedText(text: string) {
+  return text
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/\u0000/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{4,}/g, "\n\n\n")
+    .trim();
+}
+
+function inferFileType(source: StudySourceTextInput) {
+  const explicitType = source.file_type?.toLowerCase() ?? "";
+  if (explicitType) return explicitType;
+
+  const name = source.file_name?.toLowerCase() ?? source.storage_path?.toLowerCase() ?? "";
+  if (name.endsWith(".pdf")) return "application/pdf";
+  if (name.endsWith(".md") || name.endsWith(".markdown")) return "text/markdown";
+  if (name.endsWith(".txt")) return "text/plain";
+  return "application/octet-stream";
+}
+
+async function extractTextFromPdfBuffer(buffer: Buffer) {
+  const [{ PDFParse }, { getData }] = await Promise.all([
+    import("pdf-parse"),
+    import("pdf-parse/worker"),
+  ]);
+  const maxPages = Number(process.env.PDF_MAX_PAGES_PER_FILE ?? 120);
+  PDFParse.setWorker(getData());
+  const parser = new PDFParse({
+    data: new Uint8Array(buffer),
+    useWorkerFetch: false,
+  });
+
+  try {
+    const result = await parser.getText({
+      first: Number.isFinite(maxPages) && maxPages > 0 ? maxPages : undefined,
+      pageJoiner: "\n\n",
+    });
+    return normalizeExtractedText(result.text ?? "");
+  } finally {
+    await parser.destroy();
+  }
+}
+
+/**
+ * Descarga una fuente privada de Supabase Storage y extrae texto para el pipeline.
+ * Nunca escribe mensajes de error en raw_text: el caller decide el processing_status.
+ */
+export async function extractTextFromStorageSource(
+  supabase: SupabaseClient,
+  source: StudySourceTextInput,
+) {
+  if (!source.storage_path?.trim()) return null;
+
+  const { data, error } = await supabase.storage
+    .from("study-materials")
+    .download(source.storage_path);
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "No se pudo descargar el archivo subido.");
+  }
+
+  const arrayBuffer = await data.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const fileType = inferFileType(source);
+
+  if (fileType.includes("pdf")) {
+    return extractTextFromPdfBuffer(buffer);
+  }
+
+  if (
+    fileType.startsWith("text/") ||
+    fileType.includes("markdown") ||
+    fileType.includes("json")
+  ) {
+    return normalizeExtractedText(buffer.toString("utf8"));
+  }
+
+  throw new Error(
+    "Tipo de archivo no soportado para extracción automática. Pegá el texto manualmente o subí un PDF/TXT.",
+  );
 }
