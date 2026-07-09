@@ -72,6 +72,37 @@
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
   --radius-4xl: 2.5rem;
+
+  /* Sombras suaves de marca (cards y elementos flotantes) */
+  --shadow-soft: 0 6px 24px -8px rgb(22 37 28 / 0.14);
+  --shadow-card: 0 1px 2px rgb(22 37 28 / 0.04), 0 12px 32px -16px rgb(22 37 28 / 0.14);
+
+  /* Animaciones (usar con motion-safe:) */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-delayed: float 7s ease-in-out 1.4s infinite;
+  --animate-node-pulse: node-pulse 2.4s ease-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes node-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
 }
 
 :root {

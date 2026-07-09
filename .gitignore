@@ -10,6 +10,8 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
 
 # next.js
 /.next/
@@ -42,4 +44,5 @@ next-env.d.ts
 
 # remotion (subproyecto de video)
 remotion/out/
+remotion/build/
 remotion/node_modules/

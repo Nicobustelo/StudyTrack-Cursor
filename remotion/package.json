@@ -1,0 +1,28 @@
+{
+  "name": "studytrack-remotion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Videos de lanzamiento de StudyTrack (teaser 9:16 y demo 16:9) hechos con Remotion",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "bundle": "remotion bundle src/index.ts",
+    "compositions": "remotion compositions src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "render:teaser": "remotion render src/index.ts Teaser916 out/studytrack-teaser-9x16.mp4",
+    "render:demo": "remotion render src/index.ts Demo169 out/studytrack-demo-16x9.mp4",
+    "render": "npm run render:teaser && npm run render:demo"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.486",
+    "@remotion/google-fonts": "4.0.486",
+    "@remotion/paths": "4.0.486",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "remotion": "4.0.486"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}
