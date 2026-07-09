@@ -69,26 +69,13 @@ function inferFileType(source: StudySourceTextInput) {
 }
 
 async function extractTextFromPdfBuffer(buffer: Buffer) {
-  const [{ PDFParse }, { getData }] = await Promise.all([
-    import("pdf-parse"),
-    import("pdf-parse/worker"),
-  ]);
+  const pdfParseModule = await import("pdf-parse/lib/pdf-parse.js");
+  const pdfParse = pdfParseModule.default;
   const maxPages = Number(process.env.PDF_MAX_PAGES_PER_FILE ?? 120);
-  PDFParse.setWorker(getData());
-  const parser = new PDFParse({
-    data: new Uint8Array(buffer),
-    useWorkerFetch: false,
+  const result = await pdfParse(buffer, {
+    max: Number.isFinite(maxPages) && maxPages > 0 ? maxPages : undefined,
   });
-
-  try {
-    const result = await parser.getText({
-      first: Number.isFinite(maxPages) && maxPages > 0 ? maxPages : undefined,
-      pageJoiner: "\n\n",
-    });
-    return normalizeExtractedText(result.text ?? "");
-  } finally {
-    await parser.destroy();
-  }
+  return normalizeExtractedText(result.text ?? "");
 }
 
 /**
