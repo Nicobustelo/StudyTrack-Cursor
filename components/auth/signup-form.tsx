@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getAuthCallbackUrl, getClientAppUrl } from "@/lib/app-url";
 import { humanizeAuthError } from "@/lib/auth/errors";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
@@ -30,11 +31,12 @@ export function SignupForm() {
 
     try {
       const supabase = createBrowserSupabaseClient();
+      const emailRedirectTo = `${getAuthCallbackUrl(getClientAppUrl())}?next=${encodeURIComponent("/onboarding")}`;
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo,
         },
       });
 
