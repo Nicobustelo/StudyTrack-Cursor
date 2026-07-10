@@ -22,7 +22,7 @@ const STEPS: {
   },
   {
     icon: Route,
-    title: "Seguís tu track diario",
+    title: "Seguís tu plan diario",
     description:
       "Lecciones cortas, ejercicios, repasos y tests hasta llegar preparado.",
     accent: "bg-accent-purple/12 text-accent-purple",

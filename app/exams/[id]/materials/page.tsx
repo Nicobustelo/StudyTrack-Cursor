@@ -56,7 +56,7 @@ export default async function MaterialsPage({ params }: MaterialsPageProps) {
         {sources.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="Tu track necesita materiales."
+            title="Tu plan necesita materiales."
             subtitle="Subí apuntes, PDFs o resúmenes para crear tus lecciones y ejercicios."
             ctaLabel="Subir materiales"
             ctaHref="/onboarding"
@@ -94,7 +94,7 @@ export default async function MaterialsPage({ params }: MaterialsPageProps) {
                   {isLowQuality ? (
                     <p className="mt-2 text-xs leading-relaxed text-orange-700">
                       Este material parece incompleto o difícil de leer. Podés
-                      subir más apuntes para mejorar tu track.
+                      subir más apuntes para mejorar tu plan de estudio.
                     </p>
                   ) : null}
                 </li>

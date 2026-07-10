@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Onboarding — StudyTrack",
-  description: "Armá tu track personalizado para aprobar tu examen.",
+  description: "Armá tu plan de estudio personalizado para aprobar tu examen.",
 };
 
 export default async function OnboardingPage() {

@@ -102,7 +102,7 @@ export function SignupForm() {
       ) : null}
 
       <Button type="submit" size="lg" className="mt-2 w-full" disabled={loading}>
-        {loading ? "Creando cuenta…" : "Crear mi track"}
+        {loading ? "Creando cuenta…" : "Crear mi plan de estudio"}
       </Button>
 
       <p className="text-center text-sm font-medium text-ink-muted">

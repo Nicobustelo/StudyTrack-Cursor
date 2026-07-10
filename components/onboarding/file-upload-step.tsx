@@ -218,7 +218,7 @@ export function FileUploadStep({ materials, onChange }: FileUploadStepProps) {
       ) : null}
 
       <p className="text-sm text-ink-muted">
-        Mientras mejor sea el material, mejor va a ser tu track.
+        Mientras mejor sea el material, mejor va a ser tu plan de estudio.
       </p>
     </div>
   );

@@ -267,7 +267,7 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
               Vamos a armar tu camino para aprobar.
             </h1>
             <p className="mt-3 max-w-sm text-ink-muted">
-              Te vamos a hacer algunas preguntas rápidas para crear un track
+              Te vamos a hacer algunas preguntas rápidas para crear un plan
               específico para tu examen.
             </p>
           </div>
@@ -563,7 +563,7 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
           <div className="flex flex-1 flex-col items-center justify-center text-center motion-safe:animate-in motion-safe:zoom-in-95 motion-safe:duration-300">
             <div className="rounded-2xl border border-brand/30 bg-brand-light px-6 py-8 shadow-card">
               <h2 className="font-heading text-2xl font-bold text-ink">
-                Tu track está listo.
+                Tu plan de estudio está listo.
               </h2>
               <p className="mt-2 text-sm text-ink-muted">
                 Te armamos un camino hasta el examen según tus apuntes, tiempo
@@ -575,7 +575,7 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
                 </p>
               ) : null}
               <p className="mt-4 text-xs text-ink-muted">
-                Redirigiendo a tu track…
+                Redirigiendo a tu plan…
               </p>
             </div>
           </div>
@@ -606,7 +606,7 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
         goNext();
       }}
     >
-      {persisting ? "Guardando…" : step === 14 ? "Crear mi track" : "Continuar"}
+      {persisting ? "Guardando…" : step === 14 ? "Crear mi plan de estudio" : "Continuar"}
     </Button>
   ) : step === 1 ? null : null;
 

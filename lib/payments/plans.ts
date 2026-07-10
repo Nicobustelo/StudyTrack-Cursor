@@ -24,7 +24,7 @@ export const PAYWALL_BENEFITS = [
 export const PAYWALL_COPY = {
   title: "Desbloqueá tu plan completo para este examen.",
   subtitle:
-    "Ya creamos tu track. Desbloqueá todas las unidades, repasos, simulacros y ejercicios calibrados con tus exámenes anteriores.",
+    "Ya creamos tu plan de estudio. Desbloqueá todas las unidades, repasos, simulacros y ejercicios calibrados con tus exámenes anteriores.",
   cta: "Desbloquear este examen",
 } as const;
 

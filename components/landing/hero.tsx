@@ -34,7 +34,7 @@ export function Hero() {
 
           <p className="mt-5 max-w-lg text-base leading-relaxed text-ink-muted sm:text-lg">
             Subí tus materiales, indicá cuándo rendís y StudyTrack te arma un
-            track diario con lecciones, ejercicios, repasos y simulacros para
+            plan diario con lecciones, ejercicios, repasos y simulacros para
             llegar a tu nota objetivo.
           </p>
 
@@ -43,7 +43,7 @@ export function Hero() {
               href="/signup"
               ctaId="hero_primary"
               location="landing_hero"
-              label="Crear mi track"
+              label="Crear mi plan de estudio"
               size="xl"
             />
             <CtaLink

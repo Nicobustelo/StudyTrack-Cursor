@@ -1,7 +1,7 @@
 import { PageContainer } from "@/components/layout/page-container";
 
 const FACTORS: { label: string; value: number; color: string }[] = [
-  { label: "Avance del track", value: 55, color: "bg-brand" },
+  { label: "Avance del plan", value: 55, color: "bg-brand" },
   { label: "Resultados en quizzes", value: 48, color: "bg-accent-blue" },
   { label: "Temas cubiertos", value: 40, color: "bg-accent-purple" },
   { label: "Repasos al día", value: 30, color: "bg-accent-orange" },

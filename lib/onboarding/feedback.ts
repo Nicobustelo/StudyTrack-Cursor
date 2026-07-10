@@ -14,12 +14,12 @@ export function getContextualFeedback(
         return "Perfecto, vamos a armar un plan a nivel universitario.";
       }
       if (value === "Secundario") {
-        return "Genial, adaptamos el track a tu nivel de secundaria.";
+        return "Genial, adaptamos el plan a tu nivel de secundaria.";
       }
       return null;
     case 5:
       if (state.subjectName?.trim()) {
-        return `${state.subjectName.trim()} — buena elección, las materias con mucha práctica son ideales para un track.`;
+        return `${state.subjectName.trim()} — buena elección, las materias con mucha práctica son ideales para un plan de estudio.`;
       }
       return null;
     case 7:
@@ -36,7 +36,7 @@ export function getContextualFeedback(
         return "Ambicioso. Vamos a subir la exigencia de los quizzes.";
       }
       if (value === "aprobar") {
-        return "Enfocamos el track en lo esencial para aprobar.";
+        return "Enfocamos el plan en lo esencial para aprobar.";
       }
       return null;
     case 9:
@@ -49,7 +49,7 @@ export function getContextualFeedback(
       return null;
     case 11:
       if (value === "No empecé") {
-        return "Tranquilo, el track arranca desde cero.";
+        return "Tranquilo, el plan arranca desde cero.";
       }
       if (value === "Solo necesito practicar") {
         return "Perfecto, vamos directo a ejercicios y simulacros.";

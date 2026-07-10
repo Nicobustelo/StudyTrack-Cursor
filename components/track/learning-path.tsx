@@ -102,8 +102,8 @@ export function LearningPath({
         >
           <Sparkles className="size-4 shrink-0" aria-hidden />
           {vm.generating
-            ? "Estamos generando tu track personalizado. Mientras tanto, así se ve un camino completo."
-            : "Track de ejemplo: completá el onboarding para generar tu camino personalizado."}
+            ? "Estamos generando tu plan personalizado. Mientras tanto, así se ve un camino completo."
+            : "Plan de ejemplo: completá el onboarding para generar tu camino personalizado."}
         </p>
       ) : null}
 
