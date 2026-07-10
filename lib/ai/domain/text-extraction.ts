@@ -7,6 +7,7 @@ export interface StudySourceTextInput {
   storage_path?: string | null;
   file_name?: string | null;
   file_type?: string | null;
+  processing_status?: string | null;
 }
 
 /**
@@ -27,11 +28,22 @@ export function isUsableRawText(rawText: string | null | undefined): boolean {
 }
 
 /**
+ * Fuente que ya falló extracción y no tiene raw_text usable.
+ * Debe saltarse para no reintentar en bucle (errores de producción).
+ */
+export function isUnrecoverableFailedSource(
+  source: StudySourceTextInput,
+): boolean {
+  return source.processing_status === "error" && !isUsableRawText(source.raw_text);
+}
+
+/**
  * Indica si hay que ir a Storage para obtener el texto (upload con archivo).
  */
 export function sourceNeedsStorageExtraction(
   source: StudySourceTextInput,
 ): boolean {
+  if (isUnrecoverableFailedSource(source)) return false;
   if (!source.storage_path?.trim()) return false;
   return !isUsableRawText(source.raw_text);
 }
@@ -59,23 +71,73 @@ function normalizeExtractedText(text: string) {
 
 function inferFileType(source: StudySourceTextInput) {
   const explicitType = source.file_type?.toLowerCase() ?? "";
+  const name =
+    source.file_name?.toLowerCase() ?? source.storage_path?.toLowerCase() ?? "";
+
+  // Prefer extension when MIME is missing/generic — browsers often send octet-stream.
+  if (
+    !explicitType ||
+    explicitType === "application/octet-stream" ||
+    explicitType === "binary/octet-stream"
+  ) {
+    if (name.endsWith(".pdf")) return "application/pdf";
+    if (name.endsWith(".md") || name.endsWith(".markdown")) return "text/markdown";
+    if (name.endsWith(".txt")) return "text/plain";
+  }
+
   if (explicitType) return explicitType;
 
-  const name = source.file_name?.toLowerCase() ?? source.storage_path?.toLowerCase() ?? "";
   if (name.endsWith(".pdf")) return "application/pdf";
   if (name.endsWith(".md") || name.endsWith(".markdown")) return "text/markdown";
   if (name.endsWith(".txt")) return "text/plain";
   return "application/octet-stream";
 }
 
+export function humanizeExtractionError(error: unknown): string {
+  const raw =
+    error instanceof Error ? error.message : "No pudimos leer este archivo.";
+  const lower = raw.toLowerCase();
+
+  if (
+    lower.includes("bad xref") ||
+    lower.includes("xref") ||
+    lower.includes("invalid pdf") ||
+    lower.includes("formaterror") ||
+    lower.includes("password") ||
+    lower.includes("encrypted")
+  ) {
+    return "Este PDF está dañado, protegido o es solo imagen. Exportalo de nuevo con texto seleccionable o pegá el contenido manualmente.";
+  }
+
+  if (lower.includes("tipo de archivo no soportado")) {
+    return "Tipo de archivo no soportado para extracción automática. Pegá el texto manualmente o subí un PDF/TXT.";
+  }
+
+  if (lower.includes("no se pudo descargar") || lower.includes("storage")) {
+    return "No pudimos descargar el archivo subido. Reintentá o pegá el texto manualmente.";
+  }
+
+  return raw;
+}
+
 async function extractTextFromPdfBuffer(buffer: Buffer) {
   const pdfParseModule = await import("pdf-parse/lib/pdf-parse.js");
   const pdfParse = pdfParseModule.default;
   const maxPages = Number(process.env.PDF_MAX_PAGES_PER_FILE ?? 120);
-  const result = await pdfParse(buffer, {
-    max: Number.isFinite(maxPages) && maxPages > 0 ? maxPages : undefined,
-  });
-  return normalizeExtractedText(result.text ?? "");
+  try {
+    const result = await pdfParse(buffer, {
+      max: Number.isFinite(maxPages) && maxPages > 0 ? maxPages : undefined,
+    });
+    const text = normalizeExtractedText(result.text ?? "");
+    if (!text || text.length < CHUNK_DEFAULTS.minChunkLength) {
+      throw new Error(
+        "Este PDF no tiene texto seleccionable (puede ser un escaneo). Pegá el contenido manualmente o usá un PDF con texto.",
+      );
+    }
+    return text;
+  } catch (error) {
+    throw new Error(humanizeExtractionError(error));
+  }
 }
 
 /**

@@ -275,10 +275,40 @@ export function LessonScreen({
           <Button
             size="lg"
             className="w-full"
-            onClick={() => setPhase("exercise")}
+            onClick={() => {
+              if (totalExercises === 0) {
+                void finishSession([]);
+                return;
+              }
+              setPhase("exercise");
+            }}
+            disabled={submitting}
           >
-            Empezar ejercicios
+            {totalExercises === 0 ? "Completar lección" : "Empezar ejercicios"}
           </Button>
+        </div>
+      ) : null}
+
+      {phase === "exercise" && totalExercises === 0 ? (
+        <div className="flex flex-col gap-5 px-4 py-6">
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center gap-4 pt-6 text-center">
+              <p className="text-base font-semibold text-ink">
+                Esta lección aún no tiene ejercicios
+              </p>
+              <p className="text-sm text-ink-muted">
+                Podés marcarla como completada y seguir con el siguiente nodo del
+                plan.
+              </p>
+              <Button
+                size="lg"
+                onClick={() => void finishSession([])}
+                disabled={submitting}
+              >
+                Completar lección
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       ) : null}
 
