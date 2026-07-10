@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
 
 import { isSupportedMaterialFile } from "../components/onboarding/file-upload-step";
 import {
@@ -6,6 +7,17 @@ import {
   callModelWithJsonRetry,
   parseModelJson,
 } from "../lib/ai/parse-model-json";
+import {
+  humanizeExtractionError,
+  isUnrecoverableFailedSource,
+  isUsableRawText,
+  sourceNeedsStorageExtraction,
+} from "../lib/ai/domain/text-extraction";
+import { computeScorePercent } from "../lib/lessons/passing-score";
+import {
+  parseSignatureHeader,
+  verifyMercadoPagoWebhookSignature,
+} from "../lib/payments/webhook-signature";
 import {
   buildStudyMaterialStoragePath,
   sanitizeStorageFileName,
@@ -115,10 +127,90 @@ function verifyMaterialFileValidation() {
   );
 }
 
+function verifySourceExtractionGuards() {
+  assert.equal(
+    isUnrecoverableFailedSource({
+      processing_status: "error",
+      raw_text: null,
+      storage_path: "user/exam/file.pdf",
+    }),
+    true,
+  );
+  assert.equal(
+    sourceNeedsStorageExtraction({
+      processing_status: "error",
+      raw_text: null,
+      storage_path: "user/exam/file.pdf",
+    }),
+    false,
+    "failed sources must not be retried forever",
+  );
+  assert.equal(
+    sourceNeedsStorageExtraction({
+      processing_status: "pending",
+      raw_text: null,
+      storage_path: "user/exam/file.pdf",
+    }),
+    true,
+  );
+  assert.equal(isUsableRawText("ERROR: something went wrong"), false);
+  assert.equal(isUsableRawText("a".repeat(80)), true);
+
+  assert.match(
+    humanizeExtractionError(new Error("bad XRef entry")),
+    /PDF|texto seleccionable|pegá/i,
+  );
+  assert.match(
+    humanizeExtractionError(
+      new Error("Tipo de archivo no soportado para extracción automática"),
+    ),
+    /PDF\/TXT|manualmente/i,
+  );
+}
+
+function verifyPassingScoreGuards() {
+  assert.equal(computeScorePercent(0, 0, 0), 100);
+  assert.equal(computeScorePercent(0, 3, 3), 100);
+  assert.equal(computeScorePercent(2, 4, 0), 50);
+  assert.equal(computeScorePercent(2, 4, 1), 67);
+}
+
+function verifyWebhookSignature() {
+  const secret = "test_webhook_secret";
+  const dataId = "999999999";
+  const requestId = "req-abc-123";
+  const ts = "1704908010";
+  const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
+  const v1 = createHmac("sha256", secret).update(manifest).digest("hex");
+
+  assert.deepEqual(parseSignatureHeader(`ts=${ts},v1=${v1}`), { ts, v1 });
+  assert.equal(
+    verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ts},v1=${v1}`,
+      xRequestId: requestId,
+      dataId,
+      secret,
+    }),
+    true,
+  );
+  assert.equal(
+    verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ts},v1=${"0".repeat(v1.length)}`,
+      xRequestId: requestId,
+      dataId,
+      secret,
+    }),
+    false,
+  );
+}
+
 async function main() {
   await verifyModelJsonParsing();
   verifyStorageKeys();
   verifyMaterialFileValidation();
+  verifySourceExtractionGuards();
+  verifyPassingScoreGuards();
+  verifyWebhookSignature();
   console.log("verify-fixes: all checks passed");
 }
 

@@ -35,7 +35,7 @@ export function LandingFooter() {
             garantiza una nota específica. Los resultados dependen de tu
             preparación, materiales y desempeño real en el examen.
           </p>
-          <p className="mt-4 text-xs font-medium text-white/40">
+          <p className="mt-4 text-xs font-medium text-white/40" suppressHydrationWarning>
             © {new Date().getFullYear()} StudyTrack
           </p>
         </div>

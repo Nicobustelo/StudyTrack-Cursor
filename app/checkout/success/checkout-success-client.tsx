@@ -132,11 +132,11 @@ export function CheckoutSuccessClient() {
         {generatingMessage ? (
           <div className="rounded-lg border border-dashed bg-muted/40 p-4">
             <p className="font-medium text-foreground">
-              Estamos generando tus unidades premium…
+              Tu plan premium ya está activo
             </p>
             <p className="mt-1">
-              Esto puede tomar un momento la primera vez. Podés volver al plan
-              mientras se prepara el contenido.
+              Las unidades premium de tu camino ya están desbloqueadas. Volvé a
+              tu plan para seguir estudiando.
             </p>
           </div>
         ) : null}

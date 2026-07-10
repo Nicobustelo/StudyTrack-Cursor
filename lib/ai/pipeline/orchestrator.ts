@@ -10,6 +10,8 @@ import {
 } from "../domain/similarity";
 import {
   extractTextFromStorageSource,
+  humanizeExtractionError,
+  isUnrecoverableFailedSource,
   isUsableRawText,
   resolveSourceText,
   sourceNeedsStorageExtraction,
@@ -96,6 +98,7 @@ export async function detectPipelineStage(
     .eq("exam_id", examId);
 
   for (const source of sources ?? []) {
+    if (isUnrecoverableFailedSource(source)) continue;
     if (sourceNeedsStorageExtraction(source)) {
       return "chunk_sources";
     }
@@ -175,6 +178,8 @@ async function findSourceNeedingChunks(
     .order("created_at", { ascending: true });
 
   for (const source of sources ?? []) {
+    if (isUnrecoverableFailedSource(source)) continue;
+
     if (sourceNeedsStorageExtraction(source)) {
       return { source, needsStorage: true, allSources: sources ?? [] };
     }
@@ -189,6 +194,18 @@ async function findSourceNeedingChunks(
   return { source: null, needsStorage: false, allSources: sources ?? [] };
 }
 
+function sourceStillNeedsWork(source: {
+  id: string;
+  raw_text?: string | null;
+  storage_path?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
+  processing_status?: string | null;
+}) {
+  if (isUnrecoverableFailedSource(source)) return false;
+  return isUsableRawText(source.raw_text) || sourceNeedsStorageExtraction(source);
+}
+
 async function stageChunkSources(
   supabase: SupabaseClient,
   examId: string,
@@ -197,6 +214,38 @@ async function stageChunkSources(
     await findSourceNeedingChunks(supabase, examId);
 
   if (!source) {
+    const failedCount = allSources.filter((s) =>
+      isUnrecoverableFailedSource(s),
+    ).length;
+    const hasAnyCompleted = allSources.some(
+      (s) =>
+        s.processing_status === "completed" || isUsableRawText(s.raw_text),
+    );
+
+    if (failedCount > 0 && !hasAnyCompleted) {
+      throw new PipelineError(
+        "No pudimos leer tus archivos. Subí un PDF con texto seleccionable, un TXT, o pegá el contenido manualmente.",
+        400,
+        "chunk_sources",
+      );
+    }
+
+    // Algunas fuentes fallaron pero hay material usable: avanzar de etapa.
+    if (hasAnyCompleted) {
+      const nextStage = await detectPipelineStage(supabase, examId);
+      if (nextStage !== "chunk_sources") {
+        return {
+          stage: nextStage,
+          hasMore: nextStage !== "completed",
+          examId,
+          message:
+            failedCount > 0
+              ? "Algunos archivos no se pudieron leer; seguimos con el material válido."
+              : "Material listo para analizar",
+        };
+      }
+    }
+
     throw new PipelineError(
       "No hay material de estudio procesable. Subí archivos o pegá texto.",
       400,
@@ -213,16 +262,41 @@ async function stageChunkSources(
         .from("study_sources")
         .update({ processing_status: "error" })
         .eq("id", source.id);
-      throw new PipelineError(
-        error instanceof Error
-          ? error.message
-          : "No pudimos leer este archivo. Probá subirlo como PDF con texto seleccionable o pegá el contenido manualmente.",
-        400,
-        "chunk_sources",
+
+      const friendly = humanizeExtractionError(error);
+      console.warn("Source extraction failed; skipping source", {
+        examId,
+        sourceId: source.id,
+        fileName: source.file_name,
+        message: friendly,
+      });
+
+      // Marcar localmente como error para no reintentar en este mismo paso.
+      const remaining = allSources.map((s) =>
+        s.id === source.id ? { ...s, processing_status: "error" } : s,
       );
+      const nextSource = remaining.find(
+        (s) => s.id !== source.id && sourceStillNeedsWork(s),
+      );
+
+      if (nextSource) {
+        const nextStage = await detectPipelineStage(supabase, examId);
+        return {
+          stage: nextStage === "completed" ? "chunk_sources" : nextStage,
+          hasMore: true,
+          examId,
+          message: `Saltamos un archivo ilegible (${source.file_name ?? "archivo"}). Continuamos con el resto…`,
+        };
+      }
+
+      throw new PipelineError(friendly, 400, "chunk_sources");
     }
   }
   if (!text) {
+    await supabase
+      .from("study_sources")
+      .update({ processing_status: "error" })
+      .eq("id", source.id);
     throw new PipelineError(
       "No hay texto usable en el material subido.",
       400,
@@ -263,7 +337,7 @@ async function stageChunkSources(
 
   const hasMoreSources = allSources.some((s) => {
     if (s.id === source.id) return false;
-    return isUsableRawText(s.raw_text) || sourceNeedsStorageExtraction(s);
+    return sourceStillNeedsWork(s);
   });
 
   const nextStage = await detectPipelineStage(supabase, examId);
@@ -614,7 +688,12 @@ async function stageGenerateLesson(
     }
 
     validExercises = valid;
-  } catch {
+  } catch (error) {
+    console.error("Exercise generation failed for lesson", {
+      examId: exam.id,
+      lessonId: lesson.id,
+      message: error instanceof Error ? error.message : String(error),
+    });
     validExercises = [];
   }
 

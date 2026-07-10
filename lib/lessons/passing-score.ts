@@ -9,9 +9,10 @@ export function computeScorePercent(
   total: number,
   skipped = 0,
 ): number {
-  if (total === 0) return 0;
+  // Sin ejercicios (lección solo contenido) o todos saltados por inválidos → no trabar el track.
+  if (total === 0) return 100;
   const answered = total - skipped;
-  if (answered === 0) return 0;
+  if (answered === 0) return 100;
   return Math.round((correct / answered) * 100);
 }
 
