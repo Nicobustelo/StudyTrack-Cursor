@@ -7,9 +7,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getAuthCallbackUrl, getClientAppUrl } from "@/lib/app-url";
-import { humanizeAuthError } from "@/lib/auth/errors";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export function SignupForm() {
   const router = useRouter();
@@ -30,33 +27,23 @@ export function SignupForm() {
     setLoading(true);
 
     try {
-      const supabase = createBrowserSupabaseClient();
-      const emailRedirectTo = `${getAuthCallbackUrl(getClientAppUrl())}?next=${encodeURIComponent("/onboarding")}`;
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          emailRedirectTo,
-        },
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      if (signUpError) {
-        setError(humanizeAuthError(signUpError.message, signUpError.code));
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        error?: string;
+      };
+
+      if (!response.ok || payload.error) {
+        setError(payload.error ?? "No pudimos crear tu cuenta. Intentá de nuevo.");
         return;
       }
 
-      if (!data.user) {
-        setError("No pudimos crear tu cuenta. Intentá de nuevo.");
-        return;
-      }
-
-      if (data.session) {
-        router.push("/onboarding");
-        router.refresh();
-        return;
-      }
-
-      router.push("/login?message=confirm-email");
+      router.push("/onboarding");
       router.refresh();
     } catch {
       setError("No pudimos conectar con el servidor. Revisá tu conexión.");

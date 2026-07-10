@@ -14,6 +14,10 @@ const AUTH_ERROR_MAP: Record<string, string> = {
   signup_disabled: "El registro está deshabilitado por ahora. Probá más tarde.",
   over_request_rate_limit:
     "Demasiados intentos seguidos. Esperá un minuto e intentá de nuevo.",
+  over_email_send_rate_limit:
+    "Estamos enviando muchos emails. Esperá unos minutos e intentá de nuevo.",
+  email_exists:
+    "Ya existe una cuenta con ese email. Probá ingresar o recuperar tu contraseña.",
 };
 
 export function humanizeAuthError(
@@ -35,8 +39,25 @@ export function humanizeAuthError(
   if (normalized.includes("password")) {
     return AUTH_ERROR_MAP.weak_password;
   }
-  if (normalized.includes("email")) {
+  if (
+    normalized.includes("email rate limit") ||
+    normalized.includes("over_email_send_rate_limit")
+  ) {
+    return AUTH_ERROR_MAP.over_email_send_rate_limit;
+  }
+  if (normalized.includes("rate limit") || normalized.includes("too many")) {
+    return AUTH_ERROR_MAP.over_request_rate_limit;
+  }
+  if (
+    normalized.includes("invalid email") ||
+    normalized.includes("unable to validate email") ||
+    normalized.includes("email address is invalid") ||
+    normalized.includes("malformed")
+  ) {
     return "Revisá que el email esté bien escrito.";
+  }
+  if (normalized.includes("already") && normalized.includes("email")) {
+    return AUTH_ERROR_MAP.user_already_registered;
   }
 
   return (
