@@ -4,9 +4,16 @@ import {
   extractProviderPaymentId,
   processMercadoPagoPaymentNotification,
 } from "@/lib/payments/process-payment";
+import { assertMercadoPagoWebhookSignature } from "@/lib/payments/webhook-signature";
 
 export async function POST(request: Request) {
   try {
+    const signature = assertMercadoPagoWebhookSignature(request);
+    if (!signature.ok) {
+      console.warn("[webhooks/mercadopago] invalid signature", signature.reason);
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
     let body: unknown = null;
     try {
       body = await request.json();
@@ -39,6 +46,12 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    const signature = assertMercadoPagoWebhookSignature(request);
+    if (!signature.ok) {
+      console.warn("[webhooks/mercadopago] invalid signature", signature.reason);
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
     const providerPaymentId = extractProviderPaymentId(request.url, null);
 
     if (!providerPaymentId) {

@@ -88,7 +88,7 @@ const HookScene: React.FC = () => {
           ...fadeUp(frame, fps, 42),
         }}
       >
-        Subí tus materiales, poné la fecha del examen y seguí tu track diario.
+        Subí tus materiales, poné la fecha del examen y seguí tu plan diario.
       </div>
     </AbsoluteFill>
   );
@@ -408,7 +408,7 @@ const CTAScene: React.FC = () => {
         Tu camino personalizado para aprobar exámenes.
       </div>
       <div style={{ transform: `scale(${btnIn})`, marginTop: 22 }}>
-        <CTAButton label="Crear mi track" fontSize={46} pressAt={40} />
+        <CTAButton label="Crear mi plan de estudio" fontSize={46} pressAt={40} />
       </div>
       <div
         style={{

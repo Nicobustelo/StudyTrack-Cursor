@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Precios — StudyTrack",
   description:
-    "Pagás por examen, no por suscripción. Empezá gratis con las Unidades 1 y 2 de tu track.",
+    "Pagás por examen, no por suscripción. Empezá gratis con las Unidades 1 y 2 de tu plan.",
 };
 
 export default function PricingPage() {
@@ -86,7 +86,7 @@ export default function PricingPage() {
               ))}
             </ul>
             <p className="mt-6 text-sm text-ink-muted">
-              El checkout se activa desde tu track cuando desbloqueás un examen
+              El checkout se activa desde tu plan cuando desbloqueás un examen
               específico. Acá solo elegís el plan que mejor te queda.
             </p>
           </div>
@@ -96,7 +96,7 @@ export default function PricingPage() {
               href="/onboarding"
               ctaId="pricing_page_onboarding"
               location="pricing_page"
-              label="Crear mi track gratis"
+              label="Crear mi plan de estudio gratis"
               size="xl"
               className="w-full sm:w-auto"
             />

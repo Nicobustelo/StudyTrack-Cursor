@@ -1,5 +1,7 @@
 import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
 
+import { getAppUrl } from "@/lib/app-url";
+
 import type { PlanType } from "./plans";
 import { getPlan } from "./plans";
 import type { CheckoutPreferenceMetadata } from "./types";
@@ -10,13 +12,6 @@ function getAccessToken(): string {
     throw new Error("MERCADOPAGO_ACCESS_TOKEN is not configured");
   }
   return token;
-}
-
-function getAppUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-    "http://localhost:3000"
-  );
 }
 
 function getNotificationUrl(): string | undefined {

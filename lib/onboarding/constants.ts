@@ -113,7 +113,7 @@ export const ANALYSIS_MESSAGES = [
   "Estimando dificultad…",
   "Priorizando lo que más puede entrar…",
   "Creando ejercicios…",
-  "Armando tu track diario…",
+  "Armando tu plan diario…",
 ] as const;
 
 export const MAX_FREE_MATERIALS = 5;

@@ -45,15 +45,15 @@ export default async function ExamsPage() {
           Mis exámenes
         </h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Elegí un track para seguir estudiando.
+          Elegí un plan para seguir estudiando.
         </p>
 
         <div className="mt-6">
           {exams.length === 0 ? (
             <EmptyState
-              title="Todavía no tenés ningún track."
+              title="Todavía no tenés ningún plan de estudio."
               subtitle="Creá tu primer examen y convertí tus apuntes en un camino de estudio."
-              ctaLabel="Crear track"
+              ctaLabel="Crear plan"
               ctaHref="/onboarding"
             />
           ) : (

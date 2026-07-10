@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getPassingScore } from "@/lib/lessons/passing-score";
 import { getDemoExercises } from "@/lib/lessons/demo-exercises";
+import { DEMO_EXAM_SUBJECT } from "@/lib/demo/constants";
 import {
   buildExerciseItems,
   type LessonScreenData,
@@ -38,6 +39,32 @@ async function getUnitNumber(
     .maybeSingle();
 
   return data?.order_index ?? 1;
+}
+
+function withExercisesOrDemo(
+  subjectName: string | null | undefined,
+  exercises: ReturnType<typeof buildExerciseItems>,
+) {
+  const isDemoSubject = subjectName === DEMO_EXAM_SUBJECT;
+  if (exercises.length > 0) {
+    return { exercises, isDemo: false };
+  }
+
+  // Solo el examen demo puede usar ejercicios hardcodeados.
+  // En lecciones reales, ejercicios vacíos se manejan en la UI (completar contenido).
+  if (isDemoSubject) {
+    return {
+      exercises: getDemoExercises().map((exercise, index) => ({
+        questionId: `demo-${index}`,
+        exercise,
+        invalid: false,
+        errors: [],
+      })),
+      isDemo: true,
+    };
+  }
+
+  return { exercises: [], isDemo: false };
 }
 
 export async function loadLessonScreenData(
@@ -100,15 +127,7 @@ export async function loadLessonScreenData(
     exercises = buildExerciseItems(parseQuestions((questions ?? []) as QuestionRow[]));
   }
 
-  const isDemo = exercises.length === 0;
-  if (isDemo) {
-    exercises = getDemoExercises().map((exercise, index) => ({
-      questionId: `demo-${index}`,
-      exercise,
-      invalid: false,
-      errors: [],
-    }));
-  }
+  const resolved = withExercisesOrDemo(exam.subject_name, exercises);
 
   return {
     examId,
@@ -119,8 +138,8 @@ export async function loadLessonScreenData(
     unitNumber,
     targetGrade: exam.target_grade,
     passingScore: getPassingScore(exam.target_grade),
-    exercises,
-    isDemo,
+    exercises: resolved.exercises,
+    isDemo: resolved.isDemo,
     trackBackUrl: `/exams/${examId}/track`,
   };
 }
@@ -133,7 +152,7 @@ export async function loadQuizScreenData(
 
   const { data: exam } = await supabase
     .from("exams")
-    .select("id, user_id, target_grade")
+    .select("id, user_id, target_grade, subject_name")
     .eq("id", examId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -175,17 +194,10 @@ export async function loadQuizScreenData(
     .eq("quiz_id", quizId)
     .order("created_at", { ascending: true });
 
-  let exercises = buildExerciseItems(parseQuestions((questions ?? []) as QuestionRow[]));
-
-  const isDemo = exercises.length === 0;
-  if (isDemo) {
-    exercises = getDemoExercises().map((exercise, index) => ({
-      questionId: `demo-${index}`,
-      exercise,
-      invalid: false,
-      errors: [],
-    }));
-  }
+  const exercises = buildExerciseItems(
+    parseQuestions((questions ?? []) as QuestionRow[]),
+  );
+  const resolved = withExercisesOrDemo(exam.subject_name, exercises);
 
   const passingScore =
     quiz.passing_score != null
@@ -201,8 +213,8 @@ export async function loadQuizScreenData(
     unitNumber,
     targetGrade: exam.target_grade,
     passingScore,
-    exercises,
-    isDemo,
+    exercises: resolved.exercises,
+    isDemo: resolved.isDemo,
     trackBackUrl: `/exams/${examId}/track`,
   };
 }

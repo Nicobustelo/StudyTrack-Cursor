@@ -17,7 +17,7 @@ export function PricingPreview() {
           Pagás por examen, no por suscripción.
         </h2>
         <p className="mx-auto mt-4 max-w-lg text-center text-base text-ink-muted">
-          Empezá gratis con las Unidades 1 y 2 de tu track. Desbloqueá el resto
+          Empezá gratis con las Unidades 1 y 2 de tu plan. Desbloqueá el resto
           cuando lo necesites.
         </p>
 

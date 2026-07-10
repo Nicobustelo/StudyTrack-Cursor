@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getAuthCallbackUrl, getClientAppUrl } from "@/lib/app-url";
 import { humanizeAuthError } from "@/lib/auth/errors";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
@@ -30,11 +31,12 @@ export function SignupForm() {
 
     try {
       const supabase = createBrowserSupabaseClient();
+      const emailRedirectTo = `${getAuthCallbackUrl(getClientAppUrl())}?next=${encodeURIComponent("/onboarding")}`;
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo,
         },
       });
 
@@ -100,7 +102,7 @@ export function SignupForm() {
       ) : null}
 
       <Button type="submit" size="lg" className="mt-2 w-full" disabled={loading}>
-        {loading ? "Creando cuenta…" : "Crear mi track"}
+        {loading ? "Creando cuenta…" : "Crear mi plan de estudio"}
       </Button>
 
       <p className="text-center text-sm font-medium text-ink-muted">

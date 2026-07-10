@@ -128,7 +128,7 @@ test("public smoke: landing, auth pages, onboarding guard and checkout guard", a
   await expect(
     page.getByRole("heading", { name: /Convertí tus apuntes en/i }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Crear mi track" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Crear mi plan de estudio" }).first()).toBeVisible();
   await expect(page.getByText("Un camino claro hasta el examen.")).toBeVisible();
   await expect(page.getByText("Pagás por examen, no por suscripción.")).toBeVisible();
   await expect(page.locator("#track").getByText("Reto diario")).toBeVisible();
@@ -217,7 +217,7 @@ test("authenticated smoke: track, paywall, checkout API and lesson fallback", as
   await page.getByRole("button", { name: "Continuar" }).click();
 
   await expect(page.getByText("Lección completada")).toBeVisible();
-  await page.getByRole("button", { name: "Volver al track" }).click();
+  await page.getByRole("button", { name: "Volver al plan" }).click();
   await expect(page).toHaveURL(new RegExp(`/exams/${qaExamId}/track$`));
   await expect(page.locator('[data-current="true"]')).toHaveCount(1);
 

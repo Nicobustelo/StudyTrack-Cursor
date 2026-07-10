@@ -37,6 +37,8 @@ export type { ReadinessInputs, TopicMasteryInputs } from "./domain/readiness";
 export { chunkText, isCorruptChunk } from "./domain/chunking";
 export {
   extractTextFromRawText,
+  humanizeExtractionError,
+  isUnrecoverableFailedSource,
   isUsableRawText,
   resolveSourceText,
   sourceNeedsStorageExtraction,

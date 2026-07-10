@@ -99,7 +99,7 @@ export function LoginForm() {
           href="/signup"
           className="font-bold text-brand-dark hover:text-brand"
         >
-          Crear mi track
+          Crear mi plan de estudio
         </Link>
       </p>
     </form>

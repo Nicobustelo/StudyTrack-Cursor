@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { capturePipelineFailure } from "@/lib/analytics/server";
+import {
+  capturePipelineFailure,
+  flushServerAnalytics,
+} from "@/lib/analytics/server";
 import { isPipelineError, PipelineError } from "@/lib/ai/pipeline/errors";
 import { ModelJsonParseError } from "@/lib/ai/parse-model-json";
 
@@ -20,7 +23,7 @@ function toUserFacingPipelineMessage(error: unknown): string {
   return "Error interno del pipeline";
 }
 
-export function pipelineErrorResponse(
+export async function pipelineErrorResponse(
   error: unknown,
   context: {
     route: string;
@@ -49,6 +52,7 @@ export function pipelineErrorResponse(
       status_code: statusCode,
       error_message: message,
     });
+    await flushServerAnalytics();
   }
 
   return NextResponse.json(

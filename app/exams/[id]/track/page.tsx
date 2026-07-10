@@ -8,7 +8,7 @@ import { TrackHeader } from "@/components/track/track-header";
 import { loadTrackViewModel } from "@/lib/track/data";
 
 export const metadata: Metadata = {
-  title: "Tu track — StudyTrack",
+  title: "Tu plan de estudio — StudyTrack",
 };
 
 interface TrackPageProps {

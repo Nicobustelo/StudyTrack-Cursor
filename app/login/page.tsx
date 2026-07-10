@@ -30,7 +30,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="mt-8 rounded-2xl bg-surface p-6 shadow-card ring-1 ring-border sm:p-8">
           <h1 className="text-2xl text-ink">Ingresar</h1>
           <p className="mt-1.5 text-sm text-ink-muted">
-            Seguí tu track donde lo dejaste.
+            Seguí tu plan donde lo dejaste.
           </p>
 
           {banner ? (

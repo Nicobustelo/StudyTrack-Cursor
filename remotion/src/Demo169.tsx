@@ -420,7 +420,7 @@ const TrackScene: React.FC = () => {
             ...fadeUp(frame, fps, 14),
           }}
         >
-          Nada de documentos largos: un track visual que te dice qué hacer hoy,
+          Nada de documentos largos: un plan visual que te dice qué hacer hoy,
           qué sigue mañana y qué desbloqueás después.
         </div>
         <div style={{ marginTop: 44, display: "flex", flexDirection: "column", gap: 24 }}>
@@ -662,7 +662,7 @@ const plans = [
   {
     name: "1 examen",
     price: "$5.900",
-    features: ["Track completo", "Simulacros", "Modo Emergencia"],
+    features: ["Plan completo", "Simulacros", "Modo Emergencia"],
     highlight: false,
     delay: 22,
   },
@@ -845,7 +845,7 @@ const CTAScene: React.FC = () => {
         <span style={{ color: colors.primaryDark }}>camino para aprobar</span>.
       </div>
       <div style={{ transform: `scale(${btnIn})`, marginTop: 14 }}>
-        <CTAButton label="Crear mi track" fontSize={40} pressAt={45} />
+        <CTAButton label="Crear mi plan de estudio" fontSize={40} pressAt={45} />
       </div>
     </AbsoluteFill>
   );
