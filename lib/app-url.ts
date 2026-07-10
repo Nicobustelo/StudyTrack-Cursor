@@ -55,19 +55,15 @@ export function getAuthCallbackUrl(origin?: string): string {
   return `${stripTrailingSlash(base)}/auth/callback`;
 }
 
-/**
- * URL para redirects de auth en el navegador (signup, confirmación de email).
- * Usa el origen actual para que coincida con el dominio desde el que se registra
- * el usuario (custom domain, www, preview, etc.).
- */
+/** URL canónica en el navegador (signup, redirects client-side). */
 export function getClientAppUrl(): string {
-  if (typeof window !== "undefined") {
-    return window.location.origin;
-  }
-
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (configured) {
     return stripTrailingSlash(configured);
+  }
+
+  if (typeof window !== "undefined") {
+    return window.location.origin;
   }
 
   return LOCAL_APP_URL;

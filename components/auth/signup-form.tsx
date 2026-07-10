@@ -32,9 +32,8 @@ export function SignupForm() {
     try {
       const supabase = createBrowserSupabaseClient();
       const emailRedirectTo = `${getAuthCallbackUrl(getClientAppUrl())}?next=${encodeURIComponent("/onboarding")}`;
-      const normalizedEmail = email.trim().toLowerCase();
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email: normalizedEmail,
+        email: email.trim(),
         password,
         options: {
           emailRedirectTo,

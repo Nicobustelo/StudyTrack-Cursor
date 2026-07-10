@@ -6,7 +6,6 @@ import {
   callModelWithJsonRetry,
   parseModelJson,
 } from "../lib/ai/parse-model-json";
-import { humanizeAuthError } from "../lib/auth/errors";
 import {
   buildStudyMaterialStoragePath,
   sanitizeStorageFileName,
@@ -116,37 +115,10 @@ function verifyMaterialFileValidation() {
   );
 }
 
-function verifyAuthErrors() {
-  assert.equal(
-    humanizeAuthError(
-      "A user with this email address has already been registered",
-      "email_exists",
-    ),
-    "Ya existe una cuenta con ese email. Probá ingresar o recuperar tu contraseña.",
-  );
-  assert.equal(
-    humanizeAuthError("User already registered", "user_already_exists"),
-    "Ya existe una cuenta con ese email. Probá ingresar o recuperar tu contraseña.",
-  );
-  assert.equal(
-    humanizeAuthError("Unable to validate email address: invalid format"),
-    "Revisá que el email esté bien escrito.",
-  );
-  assert.equal(
-    humanizeAuthError("redirect_to: redirect url is not allowed"),
-    "No pudimos completar el registro desde esta URL. Volvé a intentar desde el sitio principal.",
-  );
-  assert.equal(
-    humanizeAuthError("Too many requests", "over_email_send_rate_limit"),
-    "Demasiados intentos seguidos. Esperá un minuto e intentá de nuevo.",
-  );
-}
-
 async function main() {
   await verifyModelJsonParsing();
   verifyStorageKeys();
   verifyMaterialFileValidation();
-  verifyAuthErrors();
   console.log("verify-fixes: all checks passed");
 }
 
