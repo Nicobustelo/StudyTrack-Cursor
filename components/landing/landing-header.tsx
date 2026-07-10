@@ -27,7 +27,7 @@ export function LandingHeader() {
             href="/signup"
             ctaId="header_primary"
             location="landing_header"
-            label="Crear mi track"
+            label="Crear mi plan de estudio"
             size="sm"
           />
         </nav>

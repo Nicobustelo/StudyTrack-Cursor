@@ -123,7 +123,7 @@ export function CheckoutSuccessClient() {
         </CardTitle>
         <CardDescription>
           {approved
-            ? "Ya desbloqueaste el plan premium. Volvé a tu track para seguir estudiando."
+            ? "Ya desbloqueaste el plan premium. Volvé a tu plan para seguir estudiando."
             : "Mercado Pago puede tardar unos segundos en confirmar el pago. No cierres esta pantalla."}
         </CardDescription>
       </CardHeader>
@@ -135,7 +135,7 @@ export function CheckoutSuccessClient() {
               Estamos generando tus unidades premium…
             </p>
             <p className="mt-1">
-              Esto puede tomar un momento la primera vez. Podés volver al track
+              Esto puede tomar un momento la primera vez. Podés volver al plan
               mientras se prepara el contenido.
             </p>
           </div>
@@ -152,7 +152,7 @@ export function CheckoutSuccessClient() {
       <CardFooter className="flex flex-col gap-2">
         {examId ? (
           <Button render={<Link href={`/exams/${examId}/track`} />} className="w-full">
-            Ir a mi track
+            Ir a mi plan
           </Button>
         ) : (
           <Button render={<Link href="/dashboard" />} className="w-full">

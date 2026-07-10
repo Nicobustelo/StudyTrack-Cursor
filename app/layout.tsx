@@ -18,7 +18,7 @@ const bodyFont = Inter({
 export const metadata: Metadata = {
   title: "StudyTrack",
   description:
-    "Tu camino de estudio personalizado: subí tus materiales y prepará tu examen con un track gamificado.",
+    "Tu camino de estudio personalizado: subí tus materiales y prepará tu examen con un plan de estudio gamificado.",
 };
 
 export default function RootLayout({

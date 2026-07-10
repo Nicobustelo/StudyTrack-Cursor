@@ -54,7 +54,7 @@ function CheckoutPendingContent() {
       <CardContent className="space-y-3 text-sm text-muted-foreground">
         <p>
           Algunos medios de pago pueden demorar. Cuando se apruebe, vas a ver
-          el premium desbloqueado en tu track.
+          el premium desbloqueado en tu plan.
         </p>
         {paymentId ? (
           <>

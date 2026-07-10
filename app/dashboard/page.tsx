@@ -50,7 +50,7 @@ export default async function DashboardPage() {
 
         <section className="mt-8">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-ink">Tus tracks</h2>
+            <h2 className="text-lg font-bold text-ink">Tus planes de estudio</h2>
             <Link href="/onboarding">
               <Button size="sm" variant="secondary">
                 <Plus className="size-4" />
@@ -62,9 +62,9 @@ export default async function DashboardPage() {
           {exams.length === 0 ? (
             <EmptyState
               icon={BookOpen}
-              title="Todavía no tenés ningún track."
+              title="Todavía no tenés ningún plan de estudio."
               subtitle="Creá tu primer examen y convertí tus apuntes en un camino de estudio."
-              ctaLabel="Crear track"
+              ctaLabel="Crear plan"
               ctaHref="/onboarding"
             />
           ) : (

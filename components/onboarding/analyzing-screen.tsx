@@ -84,7 +84,7 @@ export function AnalyzingScreen({
       const message =
         err instanceof Error
           ? err.message
-          : "Algo salió mal mientras armábamos tu track.";
+          : "Algo salió mal mientras armábamos tu plan de estudio.";
       setError(message);
       onError?.(message);
     } finally {

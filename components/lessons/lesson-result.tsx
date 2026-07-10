@@ -51,7 +51,7 @@ export function LessonResult({
           </h2>
           <p className="text-sm text-ink-muted">
             {passed
-              ? "Desbloqueaste el siguiente paso del track."
+              ? "Desbloqueaste el siguiente paso del plan."
               : "Fallaste sobre todo en estos conceptos. Te preparamos una explicación más simple y un nuevo intento."}
           </p>
         </CardContent>
@@ -99,7 +99,7 @@ export function LessonResult({
             className="w-full"
             render={<Link href={trackBackUrl} />}
           >
-            Volver al track
+            Volver al plan
           </Button>
         ) : (
           <Button size="lg" className="w-full" onClick={onRetry}>
@@ -114,7 +114,7 @@ export function LessonResult({
             className="w-full"
             render={<Link href={trackBackUrl} />}
           >
-            Volver al track
+            Volver al plan
           </Button>
         ) : null}
       </div>

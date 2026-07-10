@@ -20,7 +20,7 @@ export default function SignupPage() {
         <div className="mt-8 rounded-2xl bg-surface p-6 shadow-card ring-1 ring-border sm:p-8">
           <h1 className="text-2xl text-ink">Creá tu cuenta</h1>
           <p className="mt-1.5 text-sm text-ink-muted">
-            En unos minutos tenés tu track listo para empezar.
+            En unos minutos tenés tu plan de estudio listo para empezar.
           </p>
 
           <div className="mt-6">
