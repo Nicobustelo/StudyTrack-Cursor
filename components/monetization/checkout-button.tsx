@@ -78,6 +78,12 @@ export function CheckoutButton({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "No pudimos iniciar el checkout";
+      captureClientEvent(ANALYTICS_EVENTS.CHECKOUT_FAILURE, {
+        exam_id: examId,
+        plan_type: planType,
+        is_premium: false,
+        error_message: message,
+      });
       onCheckoutError?.(message);
       setLoading(false);
     }

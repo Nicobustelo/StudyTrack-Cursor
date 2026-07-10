@@ -32,12 +32,16 @@ export default function CheckoutFailurePage() {
 function CheckoutFailureContent() {
   const searchParams = useSearchParams();
   const paymentId = searchParams.get("payment_id");
+  const examId = searchParams.get("exam_id");
+  const planType = searchParams.get("plan_type");
 
   useEffect(() => {
     captureClientEvent(ANALYTICS_EVENTS.CHECKOUT_FAILURE, {
+      exam_id: examId ?? undefined,
+      plan_type: planType ?? undefined,
       is_premium: false,
     });
-  }, []);
+  }, [examId, planType]);
 
   return (
     <Card className="mx-auto w-full max-w-lg">

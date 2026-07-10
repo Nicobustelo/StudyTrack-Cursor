@@ -68,14 +68,18 @@ export async function createCheckoutPreference(
       },
     ],
     back_urls: {
-      success: `${appUrl}/checkout/success?payment_id=${input.paymentId}`,
-      failure: `${appUrl}/checkout/failure?payment_id=${input.paymentId}`,
-      pending: `${appUrl}/checkout/pending?payment_id=${input.paymentId}`,
+      success: `${appUrl}/checkout/success?payment_id=${input.paymentId}&exam_id=${input.examId}&plan_type=${input.planType}`,
+      failure: `${appUrl}/checkout/failure?payment_id=${input.paymentId}&exam_id=${input.examId}&plan_type=${input.planType}`,
+      pending: `${appUrl}/checkout/pending?payment_id=${input.paymentId}&exam_id=${input.examId}&plan_type=${input.planType}`,
     },
     external_reference: input.paymentId,
     metadata,
-    notification_url: getNotificationUrl(),
   };
+
+  const notificationUrl = getNotificationUrl();
+  if (notificationUrl?.startsWith("https://")) {
+    preferenceBody.notification_url = notificationUrl;
+  }
 
   if (appUrl.startsWith("https://")) {
     preferenceBody.auto_return = "approved";

@@ -27,10 +27,18 @@ export async function POST(request: Request) {
 
     const progress = await runNextPipelineStep(supabase, examId);
 
-    if (!progress.hasMore && userId) {
-      captureServerEvent(userId, ANALYTICS_EVENTS.ANALYSIS_COMPLETED, {
-        exam_id: examId,
-      });
+    if (userId) {
+      if (progress.completedStage === "generate_track") {
+        captureServerEvent(userId, ANALYTICS_EVENTS.TRACK_GENERATED, {
+          exam_id: examId,
+        });
+      }
+
+      if (!progress.hasMore) {
+        captureServerEvent(userId, ANALYTICS_EVENTS.ANALYSIS_COMPLETED, {
+          exam_id: examId,
+        });
+      }
     }
 
     return NextResponse.json(progress);

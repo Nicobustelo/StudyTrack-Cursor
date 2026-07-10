@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { buildStudyMaterialStoragePath } from "../lib/storage/sanitize-key";
+
 type PipelineProgress = {
   stage?: string;
   hasMore?: boolean;
@@ -150,7 +152,7 @@ async function main() {
 
     const sources = [
       {
-        fileName: "parkin-oferta-demanda.pdf",
+        fileName: "Parkin — Oferta y Demanda Agregada, capítulo 7.pdf",
         fileType: "application/pdf",
         sourceKind: "pdf",
         body: readFileSync(parkinPdfPath),
@@ -164,7 +166,11 @@ async function main() {
     ];
 
     for (const source of sources) {
-      const storagePath = `${userId}/${activeExamId}/${source.fileName}`;
+      const storagePath = buildStudyMaterialStoragePath(
+        userId,
+        activeExamId,
+        source.fileName,
+      );
       const { error: uploadError } = await supabase.storage
         .from("study-materials")
         .upload(storagePath, source.body, {
@@ -186,16 +192,33 @@ async function main() {
       if (insertError) throw insertError;
     }
 
-    const { error: pastedError } = await supabase.from("study_sources").insert({
-      exam_id: examId,
-      user_id: userId,
-      file_name: "texto-pegado",
-      file_type: "text/plain",
-      raw_text: readFileSync(pastedTextPath, "utf8"),
-      source_kind: "pasted_text",
-      processing_status: "pending",
-    });
-    if (pastedError) throw pastedError;
+    const { data: pastedSource, error: pastedError } = await supabase
+      .from("study_sources")
+      .insert({
+        exam_id: examId,
+        user_id: userId,
+        file_name: "texto-pegado",
+        file_type: "text/plain",
+        raw_text: readFileSync(pastedTextPath, "utf8"),
+        source_kind: "pasted_text",
+        processing_status: "pending",
+      })
+      .select("id")
+      .single();
+    if (pastedError || !pastedSource) {
+      throw pastedError ?? new Error("No pasted source returned");
+    }
+
+    const { error: corruptChunkError } = await supabase
+      .from("source_chunks")
+      .insert({
+        source_id: pastedSource.id,
+        exam_id: examId,
+        chunk_index: 0,
+        content: "ERROR: simulated corrupt chunk",
+        summary: null,
+      });
+    if (corruptChunkError) throw corruptChunkError;
 
     const started = await postPipelineStep(baseUrl, "start", activeExamId, userId);
     if (started.stage !== "chunk_sources") {
@@ -221,7 +244,9 @@ async function main() {
 
     const { data: chunkedSources, error: chunkError } = await supabase
       .from("study_sources")
-      .select("id, file_name, raw_text, processing_status, source_chunks(id)")
+      .select(
+        "id, file_name, raw_text, processing_status, source_chunks(id, content)",
+      )
       .eq("exam_id", activeExamId);
     if (chunkError) throw chunkError;
 
@@ -230,13 +255,22 @@ async function main() {
       processing_status: source.processing_status,
       raw_text_chars: source.raw_text?.length ?? 0,
       chunks: Array.isArray(source.source_chunks) ? source.source_chunks.length : 0,
+      corrupt_chunks: Array.isArray(source.source_chunks)
+        ? source.source_chunks.filter(
+            (chunk) =>
+              typeof chunk.content !== "string" ||
+              chunk.content.trim().startsWith("ERROR:") ||
+              chunk.content.trim().length < 50,
+          ).length
+        : 0,
     }));
 
     const failed = summary.filter(
       (source) =>
         source.processing_status !== "completed" ||
         source.raw_text_chars < 50 ||
-        source.chunks < 1,
+        source.chunks < 1 ||
+        source.corrupt_chunks > 0,
     );
     if (failed.length > 0) {
       throw new Error(`Material QA failed: ${JSON.stringify(failed, null, 2)}`);

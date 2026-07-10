@@ -14,6 +14,10 @@ interface PreferenceRequestBody {
 }
 
 export async function POST(request: Request) {
+  let checkoutContext:
+    | { userId: string; examId: string; planType: string; paymentId?: string }
+    | undefined;
+
   try {
     const supabase = await createClient();
     const {
@@ -49,6 +53,7 @@ export async function POST(request: Request) {
 
     const plan = getPlan(planType);
     const admin = createAdminClient();
+    checkoutContext = { userId: user.id, examId, planType };
 
     const { data: payment, error: insertError } = await admin
       .from("payments")
@@ -65,11 +70,9 @@ export async function POST(request: Request) {
       .single();
 
     if (insertError || !payment) {
-      return NextResponse.json(
-        { error: "No pudimos iniciar el pago" },
-        { status: 500 },
-      );
+      throw insertError ?? new Error("No payment row returned");
     }
+    checkoutContext.paymentId = payment.id;
 
     const preference = await createCheckoutPreference({
       paymentId: payment.id,
@@ -84,10 +87,7 @@ export async function POST(request: Request) {
       .eq("id", payment.id);
 
     if (updateError) {
-      return NextResponse.json(
-        { error: "No pudimos guardar la preferencia de pago" },
-        { status: 500 },
-      );
+      throw updateError;
     }
 
     captureServerEvent(user.id, ANALYTICS_EVENTS.CHECKOUT_STARTED, {
@@ -104,8 +104,35 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[checkout/preference]", error);
+
+    if (checkoutContext) {
+      if (checkoutContext.paymentId) {
+        try {
+          const admin = createAdminClient();
+          await admin
+            .from("payments")
+            .update({ status: "rejected" })
+            .eq("id", checkoutContext.paymentId);
+        } catch {
+          // El error original sigue siendo la causa principal del checkout fallido.
+        }
+      }
+
+      captureServerEvent(
+        checkoutContext.userId,
+        ANALYTICS_EVENTS.CHECKOUT_FAILURE,
+        {
+          exam_id: checkoutContext.examId,
+          plan_type: checkoutContext.planType,
+          is_premium: false,
+          error_message:
+            error instanceof Error ? error.message : "Unknown checkout error",
+        },
+      );
+    }
+
     return NextResponse.json(
-      { error: "No pudimos crear el checkout" },
+      { error: "No pudimos crear el checkout. Intentá de nuevo." },
       { status: 500 },
     );
   }

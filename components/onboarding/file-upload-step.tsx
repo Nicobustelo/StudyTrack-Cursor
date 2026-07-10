@@ -25,16 +25,39 @@ function inferFileType(file: File): string {
   return file.type || "application/octet-stream";
 }
 
+export function isSupportedMaterialFile(file: File): boolean {
+  const type = inferFileType(file);
+  if (
+    type === "application/pdf" ||
+    type === "text/plain" ||
+    type === "text/markdown"
+  ) {
+    return true;
+  }
+  return /\.(pdf|txt|md|markdown)$/i.test(file.name);
+}
+
 export function FileUploadStep({ materials, onChange }: FileUploadStepProps) {
   const [dragOver, setDragOver] = React.useState(false);
   const [showPaste, setShowPaste] = React.useState(false);
   const [pasteText, setPasteText] = React.useState("");
+  const [typeError, setTypeError] = React.useState<string | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const addFiles = (files: FileList | File[]) => {
     const list = Array.from(files);
+    const unsupported = list.filter((file) => !isSupportedMaterialFile(file));
+    if (unsupported.length > 0) {
+      setTypeError(
+        "Solo aceptamos PDF, TXT o Markdown. Para imágenes o Word, exportá a PDF o pegá el texto.",
+      );
+    } else {
+      setTypeError(null);
+    }
+
+    const supported = list.filter((file) => isSupportedMaterialFile(file));
     const remaining = MAX_FREE_MATERIALS - materials.length;
-    const toAdd = list.slice(0, remaining).map((file) => ({
+    const toAdd = supported.slice(0, remaining).map((file) => ({
       id: createMaterialId(),
       file,
       fileName: file.name,
@@ -97,7 +120,7 @@ export function FileUploadStep({ materials, onChange }: FileUploadStepProps) {
         <Upload className="mb-3 size-10 text-brand-dark" />
         <p className="font-bold text-ink">Arrastrá tus archivos acá</p>
         <p className="mt-1 text-sm text-ink-muted">
-          PDF, TXT, Markdown o imágenes (máx. {MAX_FREE_MATERIALS})
+          PDF, TXT o Markdown (máx. {MAX_FREE_MATERIALS})
         </p>
         <Button
           type="button"
@@ -157,6 +180,12 @@ export function FileUploadStep({ materials, onChange }: FileUploadStepProps) {
             </Button>
           </div>
         </div>
+      ) : null}
+
+      {typeError ? (
+        <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          {typeError}
+        </p>
       ) : null}
 
       {materials.length > 0 ? (

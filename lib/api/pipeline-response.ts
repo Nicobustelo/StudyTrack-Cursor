@@ -1,7 +1,24 @@
 import { NextResponse } from "next/server";
 
 import { capturePipelineFailure } from "@/lib/analytics/server";
-import { isPipelineError } from "@/lib/ai/pipeline/errors";
+import { isPipelineError, PipelineError } from "@/lib/ai/pipeline/errors";
+import { ModelJsonParseError } from "@/lib/ai/parse-model-json";
+
+function toUserFacingPipelineMessage(error: unknown): string {
+  if (error instanceof ModelJsonParseError) {
+    return error.message;
+  }
+  if (error instanceof PipelineError) {
+    return error.message;
+  }
+  if (error instanceof Error) {
+    if (error.message.includes("Unexpected token")) {
+      return "No pudimos interpretar la respuesta del modelo. Reintentá en unos segundos.";
+    }
+    return error.message;
+  }
+  return "Error interno del pipeline";
+}
 
 export function pipelineErrorResponse(
   error: unknown,
@@ -13,8 +30,7 @@ export function pipelineErrorResponse(
   },
 ) {
   const statusCode = isPipelineError(error) ? error.statusCode : 500;
-  const message =
-    error instanceof Error ? error.message : "Error interno del pipeline";
+  const message = toUserFacingPipelineMessage(error);
   const stage = isPipelineError(error) ? error.stage : context.stage;
 
   console.error("Analysis pipeline failed", {
@@ -43,8 +59,6 @@ export function pipelineErrorResponse(
     { status: statusCode },
   );
 }
-
-import { PipelineError } from "@/lib/ai/pipeline/errors";
 
 export function parseAnalysisRequestBody(body: unknown): {
   examId: string;

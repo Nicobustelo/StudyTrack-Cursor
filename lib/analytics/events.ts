@@ -159,6 +159,7 @@ export type EventPropertiesMap = {
   };
   [ANALYTICS_EVENTS.CHECKOUT_FAILURE]: AnalyticsProperties & {
     plan_type?: string;
+    error_message?: string;
   };
   [ANALYTICS_EVENTS.CHECKOUT_PENDING]: AnalyticsProperties & {
     plan_type?: string;

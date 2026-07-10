@@ -168,11 +168,16 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
       trackStepCompleted(14);
       setStep(15);
     } catch (error) {
-      setPersistError(
+      const message =
         error instanceof Error
           ? error.message
-          : "No pudimos guardar tus datos. Probá de nuevo.",
-      );
+          : "No pudimos guardar tus datos. Probá de nuevo.";
+      setPersistError(message);
+      captureClientEvent(ANALYTICS_EVENTS.STUDY_MATERIAL_UPLOAD_FAILED, {
+        subject_name: state.subjectName,
+        number_of_files: state.materials.length,
+        error_message: message,
+      });
     } finally {
       setPersisting(false);
     }

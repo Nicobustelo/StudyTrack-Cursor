@@ -108,6 +108,8 @@ export interface PipelineProgress {
   stage: PipelineStage;
   hasMore: boolean;
   examId: string;
+  /** Etapa que acaba de ejecutarse en este paso (si aplica). */
+  completedStage?: PipelineStage;
   lessonId?: string;
   lessonTitle?: string;
   lessonsTotal?: number;

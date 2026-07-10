@@ -73,6 +73,19 @@ async function fetchExam(
   return data as ExamRow;
 }
 
+async function sourceHasValidChunks(
+  supabase: SupabaseClient,
+  sourceId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("source_chunks")
+    .select("content")
+    .eq("source_id", sourceId);
+
+  if (!data?.length) return false;
+  return data.some((chunk) => !isCorruptChunk(chunk.content));
+}
+
 export async function detectPipelineStage(
   supabase: SupabaseClient,
   examId: string,
@@ -87,11 +100,8 @@ export async function detectPipelineStage(
       return "chunk_sources";
     }
     if (isUsableRawText(source.raw_text)) {
-      const { count } = await supabase
-        .from("source_chunks")
-        .select("id", { count: "exact", head: true })
-        .eq("source_id", source.id);
-      if (!count || count === 0) return "chunk_sources";
+      const hasValidChunks = await sourceHasValidChunks(supabase, source.id);
+      if (!hasValidChunks) return "chunk_sources";
     }
   }
 
@@ -170,12 +180,8 @@ async function findSourceNeedingChunks(
     }
     if (!isUsableRawText(source.raw_text)) continue;
 
-    const { count } = await supabase
-      .from("source_chunks")
-      .select("id", { count: "exact", head: true })
-      .eq("source_id", source.id);
-
-    if (!count) {
+    const hasValidChunks = await sourceHasValidChunks(supabase, source.id);
+    if (!hasValidChunks) {
       return { source, needsStorage: false, allSources: sources ?? [] };
     }
   }
@@ -275,8 +281,15 @@ async function stageAnalyzeSources(
 ): Promise<PipelineProgress> {
   const chunks = await getChunkTexts(supabase, exam.id);
   if (chunks.length === 0) {
+    const { count: rawChunkCount } = await supabase
+      .from("source_chunks")
+      .select("id", { count: "exact", head: true })
+      .eq("exam_id", exam.id);
+
     throw new PipelineError(
-      "No se detectaron temas en tus materiales",
+      rawChunkCount
+        ? "El material no se pudo procesar correctamente. Reintentá el análisis."
+        : "No hay material procesado para analizar. Subí archivos o pegá texto.",
       400,
       "analyze_sources",
     );
@@ -766,19 +779,27 @@ export async function runNextPipelineStep(
     };
   }
 
+  let progress: PipelineProgress;
+
   switch (stage) {
     case "chunk_sources":
-      return stageChunkSources(supabase, examId);
+      progress = await stageChunkSources(supabase, examId);
+      break;
     case "analyze_sources":
-      return stageAnalyzeSources(supabase, exam);
+      progress = await stageAnalyzeSources(supabase, exam);
+      break;
     case "analyze_past_exam":
-      return stageAnalyzePastExam(supabase, exam);
+      progress = await stageAnalyzePastExam(supabase, exam);
+      break;
     case "generate_track":
-      return stageGenerateTrack(supabase, exam);
+      progress = await stageGenerateTrack(supabase, exam);
+      break;
     case "generate_lesson":
-      return stageGenerateLesson(supabase, exam);
+      progress = await stageGenerateLesson(supabase, exam);
+      break;
     case "calculate_readiness":
-      return stageCalculateReadiness(supabase, exam);
+      progress = await stageCalculateReadiness(supabase, exam);
+      break;
     default:
       return {
         stage: "completed",
@@ -786,4 +807,6 @@ export async function runNextPipelineStep(
         examId,
       };
   }
+
+  return { ...progress, completedStage: stage };
 }

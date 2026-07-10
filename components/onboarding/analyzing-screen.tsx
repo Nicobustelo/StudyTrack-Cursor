@@ -5,7 +5,6 @@ import { AlertCircle, Loader2, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ANALYTICS_EVENTS, captureClientEvent } from "@/lib/analytics/client";
 import { ANALYSIS_MESSAGES } from "@/lib/onboarding/constants";
 import type { PipelineProgressResponse } from "@/lib/onboarding/types";
 import { cn } from "@/lib/utils";
@@ -67,6 +66,7 @@ export function AnalyzingScreen({
         if (!nextRes.ok) {
           const body = (await nextRes.json().catch(() => ({}))) as {
             error?: string;
+            stage?: string;
           };
           throw new Error(
             body.error ?? "El análisis se interrumpió. Podés reintentar.",
@@ -86,10 +86,6 @@ export function AnalyzingScreen({
           ? err.message
           : "Algo salió mal mientras armábamos tu track.";
       setError(message);
-      captureClientEvent(ANALYTICS_EVENTS.ANALYSIS_FAILED, {
-        exam_id: examId,
-        error_message: message,
-      });
       onError?.(message);
     } finally {
       setRunning(false);

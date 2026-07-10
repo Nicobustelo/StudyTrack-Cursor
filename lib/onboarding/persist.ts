@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { buildStudyMaterialStoragePath } from "@/lib/storage/sanitize-key";
+
 import { daysUntilExam } from "./constants";
 import type { OnboardingMaterial, OnboardingState } from "./types";
 
@@ -18,8 +20,7 @@ async function uploadMaterialFile(
 ): Promise<string | null> {
   if (!material.file) return null;
 
-  const safeName = material.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const path = `${userId}/${examId}/${Date.now()}-${safeName}`;
+  const path = buildStudyMaterialStoragePath(userId, examId, material.fileName);
 
   const { error } = await supabase.storage
     .from("study-materials")
@@ -113,8 +114,12 @@ export async function persistOnboardingData(
     const rawText: string | null = pastExam.pastedText ?? null;
 
     if (pastExam.file) {
-      const safeName = pastExam.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `${userId}/${examId}/past-exams/${Date.now()}-${safeName}`;
+      const path = buildStudyMaterialStoragePath(
+        userId,
+        examId,
+        pastExam.fileName,
+        "past-exams",
+      );
       const { error: uploadError } = await supabase.storage
         .from("study-materials")
         .upload(path, pastExam.file, {

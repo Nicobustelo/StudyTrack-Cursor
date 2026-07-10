@@ -122,10 +122,6 @@ export const ACCEPTED_MATERIAL_TYPES = [
   "application/pdf",
   "text/plain",
   "text/markdown",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
 export function daysUntilExam(examDate: string): number {

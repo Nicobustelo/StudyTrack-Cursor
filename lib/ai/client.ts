@@ -35,11 +35,14 @@ export async function chatJsonCompletion<T>(
   const model = getOpenAIModel();
   const tokenLimit = options.maxTokens;
 
+  const retryInstruction =
+    "IMPORTANTE: Tu respuesta anterior no fue JSON válido. Respondé SOLO con un objeto JSON parseable, sin markdown ni texto extra.";
+
   return callModelWithJsonRetry(
-    async () => {
+    async (attempt) => {
       const response = await client.chat.completions.create({
         model,
-        temperature: options.temperature ?? 0.4,
+        temperature: attempt > 0 ? 0.2 : (options.temperature ?? 0.4),
         ...(tokenLimit
           ? usesMaxCompletionTokens(model)
             ? { max_completion_tokens: tokenLimit }
@@ -49,7 +52,9 @@ export async function chatJsonCompletion<T>(
         messages: [
           {
             role: "system",
-            content: `${options.system}\n\n${JSON_ONLY_INSTRUCTION}`,
+            content: `${options.system}\n\n${JSON_ONLY_INSTRUCTION}${
+              attempt > 0 ? `\n\n${retryInstruction}` : ""
+            }`,
           },
           { role: "user", content: options.user },
         ],
@@ -62,7 +67,7 @@ export async function chatJsonCompletion<T>(
       return content;
     },
     {
-      maxRetries: options.maxRetries,
+      maxRetries: options.maxRetries ?? 2,
       validate: options.validate,
       onRetry: options.onRetry,
     },
