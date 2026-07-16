@@ -28,7 +28,7 @@ export default async function ExamsPage() {
     <AppShell
       header={
         <StickyHeader>
-          <div className="mx-auto flex w-full max-w-md items-center justify-between px-4 py-3">
+          <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
             <Logo />
             <Link href="/onboarding">
               <Button size="sm" variant="secondary">
@@ -40,7 +40,7 @@ export default async function ExamsPage() {
         </StickyHeader>
       }
     >
-      <div className="mx-auto w-full max-w-md flex-1 px-4 py-6">
+      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:py-10">
         <h1 className="font-heading text-2xl font-bold text-ink">
           Mis exámenes
         </h1>
@@ -57,7 +57,7 @@ export default async function ExamsPage() {
               ctaHref="/onboarding"
             />
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {exams.map((exam) => (
                 <li key={exam.id}>
                   <Link

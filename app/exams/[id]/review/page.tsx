@@ -22,13 +22,13 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
 
   return (
     <ExamPageShell exam={exam} title="Repaso">
-      <div className="flex flex-col gap-4 pb-6">
-        <p className="text-sm text-ink-muted">
+      <div className="grid gap-4 pb-6 lg:grid-cols-2 lg:items-start">
+        <p className="text-sm text-ink-muted lg:col-span-2">
           Hoy te conviene reforzar estos temas según tus errores y la fecha del
           examen.
         </p>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:col-span-2 lg:max-w-2xl">
           <Link href={`/exams/${id}/track`} className="block">
             <Button variant="secondary" className="h-auto w-full flex-col py-4">
               <Zap className="mb-1 size-5" />

@@ -37,7 +37,7 @@ export default async function PastExamsPage({ params }: PastExamsPageProps) {
             ctaHref="/onboarding"
           />
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="grid gap-3 md:grid-cols-2">
             {pastExams.map((past) => (
               <li
                 key={past.id}

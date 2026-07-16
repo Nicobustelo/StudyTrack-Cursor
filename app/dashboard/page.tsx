@@ -32,14 +32,14 @@ export default async function DashboardPage() {
     <AppShell
       header={
         <StickyHeader>
-          <div className="mx-auto flex w-full max-w-md items-center justify-between px-4 py-3">
+          <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
             <Logo />
             <SignOutButton />
           </div>
         </StickyHeader>
       }
     >
-      <div className="mx-auto w-full max-w-md flex-1 px-4 py-6">
+      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:py-10">
         <h1 className="font-heading text-2xl font-bold text-ink">Tu perfil</h1>
         <p className="mt-1 text-sm text-ink-muted">
           {profile?.full_name ?? profile?.email ?? user.email}
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
           <p className="mt-0.5 text-sm text-ink-muted">{profile.career}</p>
         ) : null}
 
-        <section className="mt-8">
+        <section className="mt-8 lg:mt-10">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-bold text-ink">Tus planes de estudio</h2>
             <Link href="/onboarding">
@@ -68,7 +68,7 @@ export default async function DashboardPage() {
               ctaHref="/onboarding"
             />
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {exams.map((exam) => {
                 const daysLeft = daysUntilLocal(exam.exam_date);
                 return (
@@ -98,7 +98,7 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        <section className="mt-8 rounded-2xl bg-muted/50 p-4 text-xs leading-relaxed text-ink-muted">
+        <section className="mt-8 max-w-3xl rounded-2xl bg-muted/50 p-4 text-xs leading-relaxed text-ink-muted">
           StudyTrack te ayuda a organizar y practicar tu estudio, pero no
           garantiza una nota específica. Los resultados dependen de tu
           preparación, materiales y desempeño real en el examen.

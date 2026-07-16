@@ -62,7 +62,7 @@ export default async function MaterialsPage({ params }: MaterialsPageProps) {
             ctaHref="/onboarding"
           />
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {sources.map((source) => {
               const quality =
                 QUALITY_BY_STATUS[source.processing_status] ?? "Media";

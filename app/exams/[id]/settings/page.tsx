@@ -38,8 +38,8 @@ export default async function ExamSettingsPage({ params }: SettingsPageProps) {
 
   return (
     <ExamPageShell exam={exam} title="Configuración">
-      <div className="flex flex-col gap-4 pb-6">
-        <dl className="divide-y divide-border rounded-2xl bg-surface ring-1 ring-border">
+      <div className="grid gap-4 pb-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
+        <dl className="divide-y divide-border rounded-2xl bg-surface ring-1 ring-border lg:row-span-3">
           {rows.map((row) => (
             <div
               key={row.label}
