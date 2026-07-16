@@ -15,6 +15,7 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 
 export const metadata: Metadata = {
   title: "Perfil — StudyTrack",
+  robots: { index: false, follow: false },
 };
 
 export default async function DashboardPage() {

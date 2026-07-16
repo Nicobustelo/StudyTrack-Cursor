@@ -5,6 +5,7 @@ import { sanitizeInternalPath } from "@/lib/auth/redirect";
 
 export const metadata: Metadata = {
   title: "Ingresar — StudyTrack",
+  robots: { index: false, follow: false },
 };
 
 type LoginPageProps = {

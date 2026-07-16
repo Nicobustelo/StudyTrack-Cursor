@@ -10,6 +10,16 @@ import { ReadinessSection } from "@/components/landing/readiness-section";
 import { SolutionSection } from "@/components/landing/solution-section";
 import { TrackSection } from "@/components/landing/track-section";
 
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: {
+    url: "/",
+    title: "StudyTrack — Un camino claro hasta tu examen",
+    description:
+      "Convertí tus materiales en un plan personalizado con práctica y progreso visible.",
+  },
+};
+
 export default function Home() {
   return (
     <AppShell header={<LandingHeader />} footer={<LandingFooter />}>
@@ -24,3 +34,4 @@ export default function Home() {
     </AppShell>
   );
 }
+import type { Metadata } from "next";

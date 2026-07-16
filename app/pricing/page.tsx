@@ -13,6 +13,13 @@ export const metadata: Metadata = {
   title: "Precios — StudyTrack",
   description:
     "Pagás por examen, no por suscripción. Empezá gratis con las Unidades 1 y 2 de tu plan.",
+  alternates: { canonical: "/pricing" },
+  openGraph: {
+    url: "/pricing",
+    title: "Precios de StudyTrack — Pagás por examen",
+    description:
+      "Probá gratis las primeras unidades y desbloqueá uno, tres o todos tus exámenes del semestre.",
+  },
 };
 
 export default function PricingPage() {

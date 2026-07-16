@@ -4,6 +4,7 @@ import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
   title: "Crear cuenta — StudyTrack",
+  robots: { index: false, follow: false },
 };
 
 export default function SignupPage() {
