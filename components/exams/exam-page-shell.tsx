@@ -29,6 +29,7 @@ export function ExamPageShell({
 
   return (
     <MobileShell
+      desktopWidth="wide"
       header={
         <StickyHeader>
           <div className="px-4 py-3">

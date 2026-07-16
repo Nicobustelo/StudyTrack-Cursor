@@ -117,6 +117,18 @@ function attachErrorGuards(page: Page) {
   };
 }
 
+async function expectNoHorizontalOverflow(page: Page) {
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+
+  expect(
+    dimensions.scrollWidth,
+    `Page should not overflow horizontally (${dimensions.scrollWidth}px > ${dimensions.clientWidth}px)`,
+  ).toBeLessThanOrEqual(dimensions.clientWidth);
+}
+
 test("public smoke: landing, auth pages, onboarding guard and checkout guard", async ({
   page,
   request,
@@ -125,6 +137,7 @@ test("public smoke: landing, auth pages, onboarding guard and checkout guard", a
 
   const landing = await page.goto("/");
   expect(landing?.status()).toBeLessThan(500);
+  await expectNoHorizontalOverflow(page);
   await expect(
     page.getByRole("heading", { name: /Convertí tus apuntes en/i }),
   ).toBeVisible();
@@ -134,11 +147,13 @@ test("public smoke: landing, auth pages, onboarding guard and checkout guard", a
   await expect(page.locator("#track").getByText("Reto diario")).toBeVisible();
 
   await page.goto("/signup");
+  await expectNoHorizontalOverflow(page);
   await expect(page.getByRole("heading", { name: "Creá tu cuenta" })).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByLabel("Contraseña")).toBeVisible();
 
   await page.goto("/login");
+  await expectNoHorizontalOverflow(page);
   await expect(page.getByRole("heading", { name: "Ingresar" })).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByLabel("Contraseña")).toBeVisible();

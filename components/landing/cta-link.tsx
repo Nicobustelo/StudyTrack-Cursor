@@ -13,6 +13,7 @@ type CtaLinkProps = {
   ctaId: string;
   location: string;
   label: string;
+  mobileLabel?: string;
   className?: string;
 } & VariantProps<typeof buttonVariants>;
 
@@ -22,6 +23,7 @@ export function CtaLink({
   ctaId,
   location,
   label,
+  mobileLabel,
   variant,
   size,
   className,
@@ -40,7 +42,14 @@ export function CtaLink({
         })
       }
     >
-      {label}
+      {mobileLabel ? (
+        <>
+          <span className="sm:hidden">{mobileLabel}</span>
+          <span className="hidden sm:inline">{label}</span>
+        </>
+      ) : (
+        label
+      )}
     </Link>
   );
 }

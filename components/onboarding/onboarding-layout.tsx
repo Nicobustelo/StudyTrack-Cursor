@@ -30,10 +30,11 @@ export function OnboardingLayout({
 }: OnboardingLayoutProps) {
   return (
     <MobileShell
+      desktopWidth="compact"
       contentClassName="px-5 pt-4"
       header={
         <div className="sticky top-0 z-20 border-b border-border bg-background/100 px-5 pb-3 pt-4 backdrop-blur-none">
-          <div className="mx-auto flex w-full max-w-md items-center gap-3">
+          <div className="mx-auto flex w-full max-w-md items-center gap-3 lg:max-w-xl">
             {showBack && step > 1 && step < 15 ? (
               <Button
                 type="button"

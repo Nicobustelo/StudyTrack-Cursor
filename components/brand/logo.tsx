@@ -8,9 +8,16 @@ type LogoProps = {
   tone?: "default" | "dark";
   className?: string;
   href?: string;
+  /** Mantiene el isotipo visible y oculta el nombre en pantallas angostas. */
+  compactOnMobile?: boolean;
 };
 
-export function Logo({ tone = "default", className, href = "/" }: LogoProps) {
+export function Logo({
+  tone = "default",
+  className,
+  href = "/",
+  compactOnMobile = false,
+}: LogoProps) {
   return (
     <Link
       href={href}
@@ -23,6 +30,7 @@ export function Logo({ tone = "default", className, href = "/" }: LogoProps) {
       <span
         className={cn(
           "font-heading text-lg font-extrabold tracking-tight",
+          compactOnMobile && "hidden sm:inline",
           tone === "dark" ? "text-white" : "text-ink",
         )}
       >
