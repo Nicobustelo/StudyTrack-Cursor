@@ -4,11 +4,6 @@ import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 
-const qaEmail = process.env.STUDYTRACK_QA_EMAIL;
-const qaPassword = process.env.STUDYTRACK_QA_PASSWORD;
-const qaExamId = process.env.STUDYTRACK_QA_EXAM_ID;
-const runCheckout = process.env.STUDYTRACK_QA_CHECKOUT === "1";
-
 test.use({
   baseURL: process.env.STUDYTRACK_BASE_URL ?? "http://localhost:3000",
   viewport: { width: 390, height: 844 },
@@ -39,6 +34,13 @@ function loadEnvFile(filename: string) {
   }
 }
 
+loadEnvFile(".env.local");
+
+const qaEmail = process.env.STUDYTRACK_QA_EMAIL;
+const qaPassword = process.env.STUDYTRACK_QA_PASSWORD;
+const qaExamId = process.env.STUDYTRACK_QA_EXAM_ID;
+const runCheckout = process.env.STUDYTRACK_QA_CHECKOUT === "1";
+
 function getBaseUrl() {
   return process.env.STUDYTRACK_BASE_URL ?? "http://localhost:3000";
 }
@@ -52,8 +54,6 @@ async function authenticateWithQaSession(page: Page) {
   if (!qaEmail || !qaPassword) {
     throw new Error("Missing STUDYTRACK_QA_EMAIL/STUDYTRACK_QA_PASSWORD");
   }
-
-  loadEnvFile(".env.local");
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey =
@@ -157,6 +157,22 @@ test("public smoke: landing, auth pages, onboarding guard and checkout guard", a
   await expect(page.getByRole("heading", { name: "Ingresar" })).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByLabel("Contraseña")).toBeVisible();
+  await expect(page.getByRole("link", { name: "¿La olvidaste?" })).toBeVisible();
+
+  await page.goto("/forgot-password");
+  await expectNoHorizontalOverflow(page);
+  await expect(
+    page.getByRole("heading", { name: "Recuperá tu cuenta" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeVisible();
+
+  await page.goto("/reset-password");
+  await expectNoHorizontalOverflow(page);
+  await expect(
+    page.getByRole("heading", { name: "Elegí una contraseña nueva" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Contraseña nueva")).toBeVisible();
+  await expect(page.getByLabel("Repetir contraseña")).toBeVisible();
 
   await page.goto("/onboarding");
   await expect(page).toHaveURL(/\/signup$/);

@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
   if (error || !data.user) {
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent("No pudimos confirmar tu sesión. Intentá ingresar de nuevo.")}`,
+      `${origin}/login?error=callback-failed`,
     );
   }
 

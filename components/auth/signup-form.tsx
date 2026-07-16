@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ export function SignupForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -36,10 +38,16 @@ export function SignupForm() {
       const payload = (await response.json()) as {
         ok?: boolean;
         error?: string;
+        requiresEmailConfirmation?: boolean;
       };
 
       if (!response.ok || payload.error) {
         setError(payload.error ?? "No pudimos crear tu cuenta. Intentá de nuevo.");
+        return;
+      }
+
+      if (payload.requiresEmailConfirmation) {
+        setConfirmationEmail(email.trim().toLowerCase());
         return;
       }
 
@@ -50,6 +58,28 @@ export function SignupForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (confirmationEmail) {
+    return (
+      <div role="status" className="flex flex-col items-center text-center">
+        <span className="flex size-12 items-center justify-center rounded-full bg-brand-light text-brand-dark">
+          <MailCheck className="size-6" aria-hidden />
+        </span>
+        <p className="mt-4 text-sm font-bold text-ink">Confirmá tu email</p>
+        <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
+          Enviamos un enlace a <strong>{confirmationEmail}</strong>. Abrilo para
+          activar tu cuenta y empezar el onboarding.
+        </p>
+        <Button
+          render={<Link href="/login" />}
+          variant="outline"
+          className="mt-5 w-full"
+        >
+          Ir a ingresar
+        </Button>
+      </div>
+    );
   }
 
   return (

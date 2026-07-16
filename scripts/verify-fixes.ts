@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
+import { readFileSync } from "node:fs";
 
 import { isSupportedMaterialFile } from "../components/onboarding/file-upload-step";
 import {
@@ -187,6 +188,19 @@ function verifyAuthRedirectGuards() {
   assert.equal(sanitizeInternalPath("javascript:alert(1)"), null);
 }
 
+function verifyPublicSignupSafety() {
+  const signupRoute = readFileSync(
+    new URL("../app/api/auth/signup/route.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.doesNotMatch(signupRoute, /createAdminClient/);
+  assert.doesNotMatch(signupRoute, /auth\.admin\.createUser/);
+  assert.doesNotMatch(signupRoute, /email_confirm/);
+  assert.match(signupRoute, /auth\.signUp/);
+  assert.match(signupRoute, /emailRedirectTo/);
+}
+
 function verifyWebhookSignature() {
   const secret = "test_webhook_secret";
   const dataId = "999999999";
@@ -223,6 +237,7 @@ async function main() {
   verifySourceExtractionGuards();
   verifyPassingScoreGuards();
   verifyAuthRedirectGuards();
+  verifyPublicSignupSafety();
   verifyWebhookSignature();
   console.log("verify-fixes: all checks passed");
 }
