@@ -25,6 +25,11 @@ import {
   daysUntilExam,
 } from "@/lib/onboarding/constants";
 import { getContextualFeedback } from "@/lib/onboarding/feedback";
+import {
+  clearOnboardingDraft,
+  loadOnboardingDraft,
+  saveOnboardingDraft,
+} from "@/lib/onboarding/draft";
 import { persistOnboardingData } from "@/lib/onboarding/persist";
 import {
   INITIAL_ONBOARDING_STATE,
@@ -77,6 +82,27 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
   const [examId, setExamId] = React.useState<string | null>(null);
   const [persistError, setPersistError] = React.useState<string | null>(null);
   const [persisting, setPersisting] = React.useState(false);
+  const [draftReady, setDraftReady] = React.useState(false);
+  const [draftRestored, setDraftRestored] = React.useState(false);
+
+  React.useEffect(() => {
+    const draft = loadOnboardingDraft(userId);
+    const frame = window.requestAnimationFrame(() => {
+      if (draft) {
+        setStep(draft.step);
+        setState(draft.state);
+        setDraftRestored(true);
+      }
+      setDraftReady(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [userId]);
+
+  React.useEffect(() => {
+    if (!draftReady) return;
+    saveOnboardingDraft(userId, step, state);
+  }, [draftReady, state, step, userId]);
 
   React.useEffect(() => {
     identifyUser(
@@ -104,12 +130,14 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
   };
 
   const goNext = (completedStep: number = step) => {
+    setDraftRestored(false);
     trackStepCompleted(completedStep);
     setFeedback(null);
     setStep((prev) => Math.min(16, prev + 1) as OnboardingStepId);
   };
 
   const goBack = () => {
+    setDraftRestored(false);
     setFeedback(null);
     setStep((prev) => Math.max(1, prev - 1) as OnboardingStepId);
   };
@@ -133,6 +161,7 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
 
     try {
       const id = await persistOnboardingData(supabase, userId, state);
+      clearOnboardingDraft(userId);
       setExamId(id);
 
       captureClientEvent(ANALYTICS_EVENTS.EXAM_CREATED, {
@@ -619,13 +648,29 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
       footer
     );
 
+  const resumeBanner = draftRestored ? (
+    <p className="rounded-xl border border-brand/20 bg-brand-light px-3 py-2.5 text-sm font-medium text-brand-dark">
+      Retomamos tu plan donde lo dejaste. Los archivos, por seguridad, se
+      vuelven a seleccionar al llegar al paso de materiales.
+    </p>
+  ) : null;
+
+  const preview = step >= 5 && step <= 14 ? previewCard : null;
+
   return (
     <OnboardingLayout
       step={step}
       totalSteps={ONBOARDING_TOTAL_STEPS}
       onBack={goBack}
       showBack={step < 15}
-      preview={step >= 5 && step <= 14 ? previewCard : undefined}
+      preview={
+        resumeBanner || preview ? (
+          <div className="flex flex-col gap-3">
+            {resumeBanner}
+            {preview}
+          </div>
+        ) : undefined
+      }
       footer={primaryFooter ?? undefined}
     >
       {renderStep()}

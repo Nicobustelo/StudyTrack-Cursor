@@ -4,13 +4,14 @@ import Link from "next/link";
 import { LoginForm } from "@/components/auth/login-form";
 import { Logo } from "@/components/brand/logo";
 import { AppShell } from "@/components/layout/app-shell";
+import { sanitizeInternalPath } from "@/lib/auth/redirect";
 
 export const metadata: Metadata = {
   title: "Ingresar — StudyTrack",
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ message?: string; error?: string }>;
+  searchParams: Promise<{ message?: string; error?: string; next?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -40,7 +41,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           ) : null}
 
           <div className="mt-6">
-            <LoginForm />
+            <LoginForm nextPath={sanitizeInternalPath(params.next)} />
           </div>
         </div>
 

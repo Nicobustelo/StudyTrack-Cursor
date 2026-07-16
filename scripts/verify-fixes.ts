@@ -13,6 +13,7 @@ import {
   isUsableRawText,
   sourceNeedsStorageExtraction,
 } from "../lib/ai/domain/text-extraction";
+import { sanitizeInternalPath } from "../lib/auth/redirect";
 import { computeScorePercent } from "../lib/lessons/passing-score";
 import {
   parseSignatureHeader,
@@ -175,6 +176,17 @@ function verifyPassingScoreGuards() {
   assert.equal(computeScorePercent(2, 4, 1), 67);
 }
 
+function verifyAuthRedirectGuards() {
+  assert.equal(
+    sanitizeInternalPath("/exams/demo/track?paywall=1#current"),
+    "/exams/demo/track?paywall=1#current",
+  );
+  assert.equal(sanitizeInternalPath("https://example.com/phishing"), null);
+  assert.equal(sanitizeInternalPath("//example.com/phishing"), null);
+  assert.equal(sanitizeInternalPath("/\\example.com/phishing"), null);
+  assert.equal(sanitizeInternalPath("javascript:alert(1)"), null);
+}
+
 function verifyWebhookSignature() {
   const secret = "test_webhook_secret";
   const dataId = "999999999";
@@ -210,6 +222,7 @@ async function main() {
   verifyMaterialFileValidation();
   verifySourceExtractionGuards();
   verifyPassingScoreGuards();
+  verifyAuthRedirectGuards();
   verifyWebhookSignature();
   console.log("verify-fixes: all checks passed");
 }
