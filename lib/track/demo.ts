@@ -202,6 +202,7 @@ export function buildDemoTrackViewModel(
     emergencyMode: false,
     isDemo: true,
     generating: false,
+    loadIssue: null,
     dailyChallenge,
     units,
   };
