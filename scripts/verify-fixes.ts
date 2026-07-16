@@ -201,6 +201,29 @@ function verifyPublicSignupSafety() {
   assert.match(signupRoute, /emailRedirectTo/);
 }
 
+function verifyThreeExamAccessSafety() {
+  const migration = readFileSync(
+    new URL(
+      "../supabase/migrations/20260716193000_add_three_exam_access_slots.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  assert.match(migration, /claim_three_exam_access/);
+  assert.match(migration, /FOR UPDATE/);
+  assert.match(migration, /claimed_count < 3/);
+  assert.match(migration, /user_id = p_user_id/);
+  assert.match(
+    migration,
+    /REVOKE ALL ON FUNCTION public\.claim_three_exam_access\(uuid, uuid\) FROM authenticated/,
+  );
+  assert.match(
+    migration,
+    /GRANT EXECUTE ON FUNCTION public\.claim_three_exam_access\(uuid, uuid\) TO service_role/,
+  );
+}
+
 function verifyWebhookSignature() {
   const secret = "test_webhook_secret";
   const dataId = "999999999";
@@ -238,6 +261,7 @@ async function main() {
   verifyPassingScoreGuards();
   verifyAuthRedirectGuards();
   verifyPublicSignupSafety();
+  verifyThreeExamAccessSafety();
   verifyWebhookSignature();
   console.log("verify-fixes: all checks passed");
 }

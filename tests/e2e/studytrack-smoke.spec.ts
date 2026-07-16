@@ -174,6 +174,24 @@ test("public smoke: landing, auth pages, onboarding guard and checkout guard", a
   await expect(page.getByLabel("Contraseña nueva")).toBeVisible();
   await expect(page.getByLabel("Repetir contraseña")).toBeVisible();
 
+  await page.goto("/pricing");
+  await expectNoHorizontalOverflow(page);
+  await expect(
+    page.getByRole("heading", {
+      name: "Pagás por examen, no por suscripción.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("1 plan completo, sin vencimiento")).toBeVisible();
+  await expect(
+    page.getByText("Hasta 3 planes completos, sin vencimiento"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Todos tus planes durante 6 meses"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Probar gratis primero" }),
+  ).toHaveCount(3);
+
   await page.goto("/onboarding");
   await expect(page).toHaveURL(/\/signup$/);
   await expect(page.getByRole("heading", { name: "Creá tu cuenta" })).toBeVisible();

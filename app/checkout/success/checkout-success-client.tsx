@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -63,7 +63,7 @@ export function CheckoutSuccessClient() {
         setHasPremiumAccess(Boolean(data.hasPremiumAccess));
         setExamId(data.examId ?? null);
 
-        if (data.status === "approved" || data.hasPremiumAccess) {
+        if (data.hasPremiumAccess) {
           setLoading(false);
           setGeneratingMessage(true);
 
@@ -73,19 +73,22 @@ export function CheckoutSuccessClient() {
             is_premium: true,
           });
 
-          if (data.hasPremiumAccess) {
-            captureClientEvent(ANALYTICS_EVENTS.PREMIUM_UNLOCKED, {
-              exam_id: data.examId,
-              plan_type: data.planType,
-              is_premium: true,
-            });
-          }
+          captureClientEvent(ANALYTICS_EVENTS.PREMIUM_UNLOCKED, {
+            exam_id: data.examId,
+            plan_type: data.planType,
+            is_premium: true,
+          });
 
           return;
         }
 
         polls += 1;
-        if (polls < MAX_POLLS && (data.status === "pending" || !data.status)) {
+        if (
+          polls < MAX_POLLS &&
+          (data.status === "pending" ||
+            data.status === "approved" ||
+            !data.status)
+        ) {
           window.setTimeout(() => void pollStatus(), POLL_INTERVAL_MS);
         } else {
           setLoading(false);
@@ -102,21 +105,26 @@ export function CheckoutSuccessClient() {
     };
   }, [paymentId]);
 
-  const approved = status === "approved" || hasPremiumAccess;
+  const activationPending = status === "approved" && !hasPremiumAccess;
+  const approved = hasPremiumAccess;
 
   return (
     <Card className="mx-auto w-full max-w-lg">
       <CardHeader className="text-center">
         <div className="mx-auto mb-2 flex size-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-          {loading ? (
+          {approved ? (
+            <CheckCircle2 className="size-7" />
+          ) : loading || activationPending ? (
             <Loader2 className="size-7 animate-spin" />
           ) : (
-            <CheckCircle2 className="size-7" />
+            <AlertCircle className="size-7" />
           )}
         </div>
         <CardTitle>
           {approved
             ? "¡Pago confirmado!"
+            : activationPending
+              ? "Pago confirmado. Activando tu plan…"
             : loading
               ? "Confirmando tu pago…"
               : "Estamos procesando tu pago"}
@@ -124,6 +132,8 @@ export function CheckoutSuccessClient() {
         <CardDescription>
           {approved
             ? "Ya desbloqueaste el plan premium. Volvé a tu plan para seguir estudiando."
+            : activationPending
+              ? "Mercado Pago aprobó la operación. Estamos terminando de habilitar tu contenido Premium."
             : "Mercado Pago puede tardar unos segundos en confirmar el pago. No cierres esta pantalla."}
         </CardDescription>
       </CardHeader>
@@ -150,6 +160,16 @@ export function CheckoutSuccessClient() {
       </CardContent>
 
       <CardFooter className="flex flex-col gap-2">
+        {activationPending && !loading ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => window.location.reload()}
+          >
+            Volver a comprobar
+          </Button>
+        ) : null}
         {examId ? (
           <Button render={<Link href={`/exams/${examId}/track`} />} className="w-full">
             Ir a mi plan

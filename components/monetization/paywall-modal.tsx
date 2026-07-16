@@ -82,7 +82,6 @@ export function PaywallModal({
               key={planType}
               plan={PLANS[planType]}
               examId={examId}
-              ctaLabel={PAYWALL_COPY.cta}
             />
           ))}
         </div>

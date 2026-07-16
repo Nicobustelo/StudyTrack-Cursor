@@ -77,7 +77,25 @@ export async function hasExamPremiumAccess(
   examId: string,
 ): Promise<boolean> {
   const rows = await fetchActiveAccessRows(userId);
-  return rows.some((row) => rowCoversExam(row, examId));
+  if (rows.some((row) => rowCoversExam(row, examId))) {
+    return true;
+  }
+
+  if (!rows.some((row) => row.plan_type === "three_exams")) {
+    return false;
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("claim_three_exam_access", {
+    p_user_id: userId,
+    p_exam_id: examId,
+  });
+
+  if (error) {
+    throw new Error(`Failed to claim three-exam access: ${error.message}`);
+  }
+
+  return data === true;
 }
 
 /**
