@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import {
   BarChart3,
   FileText,
+  House,
   Route,
   RotateCcw,
-  User,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,7 +24,7 @@ const NAV_ICONS: Record<BottomNavIconKey, LucideIcon> = {
   review: RotateCcw,
   mock_exams: FileText,
   progress: BarChart3,
-  profile: User,
+  home: House,
 };
 
 type BottomNavProps = {

@@ -192,6 +192,10 @@ test("public smoke: landing, auth pages, onboarding guard and checkout guard", a
     page.getByRole("link", { name: "Probar gratis primero" }),
   ).toHaveCount(3);
 
+  await page.goto("/exams");
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Ingresar" })).toBeVisible();
+
   await page.goto("/onboarding");
   await expect(page).toHaveURL(/\/signup$/);
   await expect(page.getByRole("heading", { name: "Creá tu cuenta" })).toBeVisible();
