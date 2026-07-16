@@ -80,8 +80,8 @@ export function MatchingExerciseComponent({
         Tocá un ítem de la izquierda y luego su pareja a la derecha.
       </p>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-2">
+      <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3">
+        <div className="flex min-w-0 flex-col gap-2">
           {exercise.options.left.map((item, index) => (
             <button
               key={`left-${index}`}
@@ -89,7 +89,7 @@ export function MatchingExerciseComponent({
               disabled={disabled || matchedLefts.has(index)}
               onClick={() => handleLeftClick(index)}
               className={cn(
-                "rounded-xl border-2 px-3 py-2.5 text-left text-sm font-medium transition-all",
+                "min-w-0 [overflow-wrap:anywhere] rounded-xl border-2 px-2.5 py-2.5 text-left text-sm font-medium transition-all sm:px-3",
                 matchedLefts.has(index)
                   ? "border-primary/30 bg-primary/10 opacity-60"
                   : selectedLeft === index
@@ -102,7 +102,7 @@ export function MatchingExerciseComponent({
           ))}
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           {shuffledRight.map((rightIndex) => (
             <button
               key={`right-${rightIndex}`}
@@ -110,7 +110,7 @@ export function MatchingExerciseComponent({
               disabled={disabled || matchedRights.has(rightIndex)}
               onClick={() => handleRightClick(rightIndex)}
               className={cn(
-                "rounded-xl border-2 px-3 py-2.5 text-left text-sm font-medium transition-all",
+                "min-w-0 [overflow-wrap:anywhere] rounded-xl border-2 px-2.5 py-2.5 text-left text-sm font-medium transition-all sm:px-3",
                 matchedRights.has(rightIndex)
                   ? "border-primary/30 bg-primary/10 opacity-60"
                   : "border-border bg-surface hover:border-primary/40",

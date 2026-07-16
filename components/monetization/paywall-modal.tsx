@@ -52,7 +52,7 @@ export function PaywallModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={cn("max-h-[90vh] overflow-y-auto sm:max-w-3xl", className)}
+        className={cn("sm:max-w-3xl", className)}
         showCloseButton
       >
         <DialogHeader className="space-y-2 text-left">

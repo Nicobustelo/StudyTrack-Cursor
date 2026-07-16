@@ -133,6 +133,7 @@ test("public smoke: landing, auth pages, onboarding guard and checkout guard", a
   page,
   request,
 }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
   const guards = attachErrorGuards(page);
 
   const landing = await page.goto("/");
