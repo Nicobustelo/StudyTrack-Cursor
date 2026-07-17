@@ -44,7 +44,7 @@ export default async function ProgressPage({ params }: ProgressPageProps) {
 
   return (
     <ExamPageShell exam={exam} title="Progreso">
-      <div className="flex flex-col gap-5 pb-6">
+      <div className="grid gap-5 pb-6 lg:grid-cols-2 lg:items-start">
         <div className="rounded-2xl bg-surface p-5 shadow-card ring-1 ring-border">
           <div className="flex items-center justify-between">
             <div>
@@ -70,7 +70,7 @@ export default async function ProgressPage({ params }: ProgressPageProps) {
         </div>
 
         {weakTopics.length > 0 ? (
-          <section className="rounded-xl border border-orange-200 bg-orange-50 p-4">
+          <section className="rounded-xl border border-orange-200 bg-orange-50 p-4 lg:col-span-2">
             <p className="flex items-center gap-2 text-sm font-bold text-ink">
               <TrendingUp className="size-4" />
               Recomendación de hoy

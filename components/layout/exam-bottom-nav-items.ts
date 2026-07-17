@@ -3,7 +3,7 @@ export type BottomNavIconKey =
   | "review"
   | "mock_exams"
   | "progress"
-  | "profile";
+  | "home";
 
 export type BottomNavItem = {
   href: string;
@@ -11,7 +11,7 @@ export type BottomNavItem = {
   icon: BottomNavIconKey;
 };
 
-/** Ítems estándar del nav para un examen (spec 23): Plan / Repaso / Simulacros / Progreso / Perfil. */
+/** Ítems estándar del nav para un examen. */
 export function examBottomNavItems(examId: string): BottomNavItem[] {
   const base = `/exams/${examId}`;
   return [
@@ -19,6 +19,6 @@ export function examBottomNavItems(examId: string): BottomNavItem[] {
     { href: `${base}/review`, label: "Repaso", icon: "review" },
     { href: `${base}/mock-exams`, label: "Simulacros", icon: "mock_exams" },
     { href: `${base}/progress`, label: "Progreso", icon: "progress" },
-    { href: "/dashboard", label: "Perfil", icon: "profile" },
+    { href: "/dashboard", label: "Inicio", icon: "home" },
   ];
 }

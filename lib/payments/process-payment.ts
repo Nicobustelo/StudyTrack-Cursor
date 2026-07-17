@@ -60,17 +60,29 @@ async function grantPremiumAccess(
   const expiresAt = computeAccessExpiry(planType);
   const examId = planType === "semester" ? null : payment.exam_id;
 
-  const { data: existing } = await supabase
+  let existingQuery = supabase
     .from("access_purchases")
     .select("id")
     .eq("user_id", payment.user_id)
     .eq("status", "active")
-    .eq("plan_type", planType)
-    .eq("exam_id", examId)
-    .maybeSingle();
+    .eq("plan_type", planType);
+
+  existingQuery =
+    examId === null
+      ? existingQuery.is("exam_id", null)
+      : existingQuery.eq("exam_id", examId);
+
+  const { data: existing, error: existingError } =
+    await existingQuery.maybeSingle();
+
+  if (existingError) {
+    throw new Error(`Failed to inspect premium access: ${existingError.message}`);
+  }
+
+  let accessPurchaseId: string;
 
   if (existing) {
-    await supabase
+    const { error: updateError } = await supabase
       .from("access_purchases")
       .update({
         status: "active",
@@ -79,17 +91,51 @@ async function grantPremiumAccess(
         updated_at: now,
       })
       .eq("id", existing.id);
-    return;
+
+    if (updateError) {
+      throw new Error(`Failed to refresh premium access: ${updateError.message}`);
+    }
+
+    accessPurchaseId = existing.id;
+  } else {
+    const { data: inserted, error: insertError } = await supabase
+      .from("access_purchases")
+      .insert({
+        user_id: payment.user_id,
+        exam_id: examId,
+        plan_type: planType,
+        status: "active",
+        starts_at: now,
+        expires_at: expiresAt,
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !inserted) {
+      throw new Error(
+        `Failed to grant premium access: ${insertError?.message ?? "No access row returned"}`,
+      );
+    }
+
+    accessPurchaseId = inserted.id;
   }
 
-  await supabase.from("access_purchases").insert({
-    user_id: payment.user_id,
-    exam_id: examId,
-    plan_type: planType,
-    status: "active",
-    starts_at: now,
-    expires_at: expiresAt,
-  });
+  if (planType === "three_exams" && payment.exam_id) {
+    const { error: claimError } = await supabase
+      .from("access_purchase_exams")
+      .upsert(
+        {
+          access_purchase_id: accessPurchaseId,
+          user_id: payment.user_id,
+          exam_id: payment.exam_id,
+        },
+        { onConflict: "access_purchase_id,exam_id" },
+      );
+
+    if (claimError) {
+      throw new Error(`Failed to claim first exam slot: ${claimError.message}`);
+    }
+  }
 }
 
 export async function processMercadoPagoPaymentNotification(
@@ -138,9 +184,11 @@ export async function processMercadoPagoPaymentNotification(
     asPlanType(readMetadataString(mpPayment.metadata, "plan_type"));
 
   if (mappedStatus === "approved" && planType) {
-    if (!alreadyApproved) {
-      await grantPremiumAccess(payment, planType);
+    // Es idempotente y se ejecuta también en reintentos: si la escritura de
+    // acceso falló después de aprobar el pago, el próximo webhook la repara.
+    await grantPremiumAccess(payment, planType);
 
+    if (!alreadyApproved) {
       captureServerEvent(payment.user_id, ANALYTICS_EVENTS.PREMIUM_UNLOCKED, {
         exam_id: payment.exam_id ?? undefined,
         plan_type: planType,

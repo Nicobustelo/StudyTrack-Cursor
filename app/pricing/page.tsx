@@ -13,6 +13,13 @@ export const metadata: Metadata = {
   title: "Precios — StudyTrack",
   description:
     "Pagás por examen, no por suscripción. Empezá gratis con las Unidades 1 y 2 de tu plan.",
+  alternates: { canonical: "/pricing" },
+  openGraph: {
+    url: "/pricing",
+    title: "Precios de StudyTrack — Pagás por examen",
+    description:
+      "Probá gratis las primeras unidades y desbloqueá uno, tres o todos tus exámenes del semestre.",
+  },
 };
 
 export default function PricingPage() {
@@ -29,6 +36,21 @@ export default function PricingPage() {
             Empezá gratis: creá tu examen, subí tus materiales y completá las
             Unidades 1 y 2 sin pagar nada.
           </p>
+
+          <ol className="mx-auto mt-8 grid max-w-3xl gap-3 rounded-2xl bg-brand-light/60 p-4 ring-1 ring-brand/15 sm:grid-cols-3 sm:p-5">
+            {[
+              ["1", "Creá tu examen gratis"],
+              ["2", "Probá las primeras unidades"],
+              ["3", "Elegí un pack al desbloquear"],
+            ].map(([number, label]) => (
+              <li key={number} className="flex items-center gap-3 text-sm font-bold text-ink">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand text-xs text-white">
+                  {number}
+                </span>
+                {label}
+              </li>
+            ))}
+          </ol>
 
           <div className="mx-auto mt-12 grid max-w-4xl gap-4 md:grid-cols-3">
             {plans.map((plan) => (
@@ -56,11 +78,16 @@ export default function PricingPage() {
                   Pago único con Mercado Pago
                 </p>
 
+                <p className="mt-4 flex min-h-10 items-start gap-2 text-sm font-bold leading-snug text-ink">
+                  <Check className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
+                  {plan.accessSummary}
+                </p>
+
                 <CtaLink
                   href="/signup"
                   ctaId={`pricing_plan_${plan.id}`}
                   location="pricing_page"
-                  label="Empezar gratis"
+                  label="Probar gratis primero"
                   size="lg"
                   className="mt-6 w-full"
                 />
@@ -86,8 +113,9 @@ export default function PricingPage() {
               ))}
             </ul>
             <p className="mt-6 text-sm text-ink-muted">
-              El checkout se activa desde tu plan cuando desbloqueás un examen
-              específico. Acá solo elegís el plan que mejor te queda.
+              El checkout se abre desde el camino de un examen, justo cuando
+              intentás entrar a contenido Premium. Ahí elegís el pack y pagás
+              de forma segura con Mercado Pago.
             </p>
           </div>
 

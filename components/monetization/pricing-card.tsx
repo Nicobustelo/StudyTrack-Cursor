@@ -54,7 +54,7 @@ export function PricingCard({
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li className="flex items-start gap-2">
             <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-            Acceso premium para este plan
+            {plan.accessSummary}
           </li>
           <li className="flex items-start gap-2">
             <Check className="mt-0.5 size-4 shrink-0 text-primary" />
@@ -67,7 +67,7 @@ export function PricingCard({
         <CheckoutButton
           planType={plan.id}
           examId={examId}
-          label={ctaLabel ?? "Elegir plan"}
+          label={ctaLabel ?? plan.checkoutLabel}
           size="default"
         />
       </CardFooter>

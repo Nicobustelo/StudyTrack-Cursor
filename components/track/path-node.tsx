@@ -218,7 +218,7 @@ export function PathNode({
     <span className="mt-2 flex flex-col items-center gap-1">
       <span
         className={cn(
-          "line-clamp-2 max-w-35 text-center text-xs font-bold leading-tight",
+          "line-clamp-2 max-w-32 text-center text-xs font-bold leading-tight sm:max-w-35",
           node.status === "locked" ? "text-ink-muted/70" : "text-ink",
         )}
       >
@@ -229,7 +229,7 @@ export function PathNode({
           {node.score}%
         </span>
       ) : node.broken ? (
-        <span className="max-w-35 text-center text-[10px] font-semibold leading-tight text-[#8a6410]">
+        <span className="max-w-32 text-center text-[10px] font-semibold leading-tight text-[#8a6410] sm:max-w-35">
           Tocá para reintentar o saltar
         </span>
       ) : node.isCurrent && node.durationMinutes ? (
@@ -257,7 +257,7 @@ export function PathNode({
       {showLockedHint ? (
         <span
           role="status"
-          className="absolute left-1/2 top-full z-30 mt-1 w-max max-w-44 -translate-x-1/2 rounded-lg bg-ink px-2.5 py-1.5 text-center text-[11px] font-semibold text-white shadow-soft animate-in fade-in zoom-in-95"
+          className="absolute left-1/2 top-full z-30 mt-1 w-max max-w-32 -translate-x-1/2 rounded-lg bg-ink px-2.5 py-1.5 text-center text-[11px] font-semibold text-white shadow-soft animate-in fade-in zoom-in-95 sm:max-w-44"
         >
           Completá la lección anterior
         </span>
@@ -266,7 +266,7 @@ export function PathNode({
   );
 
   const wrapperClass =
-    "group/node absolute z-10 flex w-36 -translate-x-1/2 flex-col items-center outline-none";
+    "group/node absolute z-10 flex w-32 -translate-x-1/2 flex-col items-center outline-none sm:w-36";
   const wrapperStyle = {
     left: `${xPercent}%`,
     top: y - size / 2,

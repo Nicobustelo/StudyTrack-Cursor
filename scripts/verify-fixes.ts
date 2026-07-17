@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
+import { readFileSync } from "node:fs";
 
 import { isSupportedMaterialFile } from "../components/onboarding/file-upload-step";
 import {
@@ -13,6 +14,7 @@ import {
   isUsableRawText,
   sourceNeedsStorageExtraction,
 } from "../lib/ai/domain/text-extraction";
+import { sanitizeInternalPath } from "../lib/auth/redirect";
 import { computeScorePercent } from "../lib/lessons/passing-score";
 import {
   parseSignatureHeader,
@@ -175,6 +177,53 @@ function verifyPassingScoreGuards() {
   assert.equal(computeScorePercent(2, 4, 1), 67);
 }
 
+function verifyAuthRedirectGuards() {
+  assert.equal(
+    sanitizeInternalPath("/exams/demo/track?paywall=1#current"),
+    "/exams/demo/track?paywall=1#current",
+  );
+  assert.equal(sanitizeInternalPath("https://example.com/phishing"), null);
+  assert.equal(sanitizeInternalPath("//example.com/phishing"), null);
+  assert.equal(sanitizeInternalPath("/\\example.com/phishing"), null);
+  assert.equal(sanitizeInternalPath("javascript:alert(1)"), null);
+}
+
+function verifyPublicSignupSafety() {
+  const signupRoute = readFileSync(
+    new URL("../app/api/auth/signup/route.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.doesNotMatch(signupRoute, /createAdminClient/);
+  assert.doesNotMatch(signupRoute, /auth\.admin\.createUser/);
+  assert.doesNotMatch(signupRoute, /email_confirm/);
+  assert.match(signupRoute, /auth\.signUp/);
+  assert.match(signupRoute, /emailRedirectTo/);
+}
+
+function verifyThreeExamAccessSafety() {
+  const migration = readFileSync(
+    new URL(
+      "../supabase/migrations/20260716193000_add_three_exam_access_slots.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  assert.match(migration, /claim_three_exam_access/);
+  assert.match(migration, /FOR UPDATE/);
+  assert.match(migration, /claimed_count < 3/);
+  assert.match(migration, /user_id = p_user_id/);
+  assert.match(
+    migration,
+    /REVOKE ALL ON FUNCTION public\.claim_three_exam_access\(uuid, uuid\) FROM authenticated/,
+  );
+  assert.match(
+    migration,
+    /GRANT EXECUTE ON FUNCTION public\.claim_three_exam_access\(uuid, uuid\) TO service_role/,
+  );
+}
+
 function verifyWebhookSignature() {
   const secret = "test_webhook_secret";
   const dataId = "999999999";
@@ -210,6 +259,9 @@ async function main() {
   verifyMaterialFileValidation();
   verifySourceExtractionGuards();
   verifyPassingScoreGuards();
+  verifyAuthRedirectGuards();
+  verifyPublicSignupSafety();
+  verifyThreeExamAccessSafety();
   verifyWebhookSignature();
   console.log("verify-fixes: all checks passed");
 }

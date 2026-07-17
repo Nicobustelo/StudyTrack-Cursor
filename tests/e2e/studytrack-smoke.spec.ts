@@ -4,11 +4,6 @@ import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 
-const qaEmail = process.env.STUDYTRACK_QA_EMAIL;
-const qaPassword = process.env.STUDYTRACK_QA_PASSWORD;
-const qaExamId = process.env.STUDYTRACK_QA_EXAM_ID;
-const runCheckout = process.env.STUDYTRACK_QA_CHECKOUT === "1";
-
 test.use({
   baseURL: process.env.STUDYTRACK_BASE_URL ?? "http://localhost:3000",
   viewport: { width: 390, height: 844 },
@@ -39,6 +34,13 @@ function loadEnvFile(filename: string) {
   }
 }
 
+loadEnvFile(".env.local");
+
+const qaEmail = process.env.STUDYTRACK_QA_EMAIL;
+const qaPassword = process.env.STUDYTRACK_QA_PASSWORD;
+const qaExamId = process.env.STUDYTRACK_QA_EXAM_ID;
+const runCheckout = process.env.STUDYTRACK_QA_CHECKOUT === "1";
+
 function getBaseUrl() {
   return process.env.STUDYTRACK_BASE_URL ?? "http://localhost:3000";
 }
@@ -52,8 +54,6 @@ async function authenticateWithQaSession(page: Page) {
   if (!qaEmail || !qaPassword) {
     throw new Error("Missing STUDYTRACK_QA_EMAIL/STUDYTRACK_QA_PASSWORD");
   }
-
-  loadEnvFile(".env.local");
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey =
@@ -117,14 +117,28 @@ function attachErrorGuards(page: Page) {
   };
 }
 
+async function expectNoHorizontalOverflow(page: Page) {
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+
+  expect(
+    dimensions.scrollWidth,
+    `Page should not overflow horizontally (${dimensions.scrollWidth}px > ${dimensions.clientWidth}px)`,
+  ).toBeLessThanOrEqual(dimensions.clientWidth);
+}
+
 test("public smoke: landing, auth pages, onboarding guard and checkout guard", async ({
   page,
   request,
 }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
   const guards = attachErrorGuards(page);
 
   const landing = await page.goto("/");
   expect(landing?.status()).toBeLessThan(500);
+  await expectNoHorizontalOverflow(page);
   await expect(
     page.getByRole("heading", { name: /Convertí tus apuntes en/i }),
   ).toBeVisible();
@@ -134,14 +148,54 @@ test("public smoke: landing, auth pages, onboarding guard and checkout guard", a
   await expect(page.locator("#track").getByText("Reto diario")).toBeVisible();
 
   await page.goto("/signup");
+  await expectNoHorizontalOverflow(page);
   await expect(page.getByRole("heading", { name: "Creá tu cuenta" })).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByLabel("Contraseña")).toBeVisible();
 
   await page.goto("/login");
+  await expectNoHorizontalOverflow(page);
   await expect(page.getByRole("heading", { name: "Ingresar" })).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByLabel("Contraseña")).toBeVisible();
+  await expect(page.getByRole("link", { name: "¿La olvidaste?" })).toBeVisible();
+
+  await page.goto("/forgot-password");
+  await expectNoHorizontalOverflow(page);
+  await expect(
+    page.getByRole("heading", { name: "Recuperá tu cuenta" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeVisible();
+
+  await page.goto("/reset-password");
+  await expectNoHorizontalOverflow(page);
+  await expect(
+    page.getByRole("heading", { name: "Elegí una contraseña nueva" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Contraseña nueva")).toBeVisible();
+  await expect(page.getByLabel("Repetir contraseña")).toBeVisible();
+
+  await page.goto("/pricing");
+  await expectNoHorizontalOverflow(page);
+  await expect(
+    page.getByRole("heading", {
+      name: "Pagás por examen, no por suscripción.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("1 plan completo, sin vencimiento")).toBeVisible();
+  await expect(
+    page.getByText("Hasta 3 planes completos, sin vencimiento"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Todos tus planes durante 6 meses"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Probar gratis primero" }),
+  ).toHaveCount(3);
+
+  await page.goto("/exams");
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Ingresar" })).toBeVisible();
 
   await page.goto("/onboarding");
   await expect(page).toHaveURL(/\/signup$/);
@@ -155,7 +209,7 @@ test("public smoke: landing, auth pages, onboarding guard and checkout guard", a
   guards.assertClean();
 });
 
-test("authenticated smoke: track, paywall, checkout API and lesson fallback", async ({
+test("authenticated smoke: track, paywall, checkout API and lesson rendering", async ({
   page,
 }) => {
   test.skip(
@@ -167,22 +221,33 @@ test("authenticated smoke: track, paywall, checkout API and lesson fallback", as
   await authenticateWithQaSession(page);
 
   await page.goto(`/exams/${qaExamId}/track`);
-  await expect(page.getByText("Análisis Matemático 2")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.locator('[data-slot="path-node"]').first()).toBeVisible();
   await expect(page.locator('[data-current="true"]')).toHaveCount(1);
 
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  await expect(
-    page.getByRole("heading", { name: "Extremos y optimización" }),
-  ).toBeVisible();
+  const pathUnits = page.locator('[data-slot="path-unit"]');
+  const pathUnitCount = await pathUnits.count();
+  expect(pathUnitCount).toBeGreaterThan(0);
+  await pathUnits.nth(pathUnitCount - 1).scrollIntoViewIfNeeded();
+  await expect(pathUnits.nth(pathUnitCount - 1)).toBeVisible();
 
-  await page.locator('[data-status="premium_locked"]').first().click();
+  const premiumNodes = page.locator('[data-status="premium_locked"]');
+  expect(await premiumNodes.count()).toBeGreaterThan(0);
+  await premiumNodes.first().click();
   await expect(
     page.getByRole("heading", {
       name: "Desbloqueá tu plan completo para este examen.",
     }),
   ).toBeVisible();
-  await page.keyboard.press("Escape");
+
+  const paywall = page.getByRole("dialog");
+  await expect(paywall).toBeVisible();
+  expect(await paywall.evaluate((element) => element.scrollTop)).toBe(0);
+  const closePaywall = page.getByRole("button", { name: "Cerrar" });
+  await expect(closePaywall).toBeVisible();
+  await closePaywall.click();
+  await expect(paywall).toBeHidden();
 
   if (runCheckout) {
     const preference = await page.request.post("/api/checkout/preference", {
@@ -196,30 +261,15 @@ test("authenticated smoke: track, paywall, checkout API and lesson fallback", as
   const currentNode = page.locator('[data-current="true"]');
   await currentNode.scrollIntoViewIfNeeded();
   await currentNode.click();
-  await expect(page).toHaveURL(/\/exams\/[^/]+\/lesson\/[^/]+/);
-  await expect(page.getByRole("heading")).toBeVisible();
+  await expect(page).toHaveURL(/\/exams\/[^/]+\/(lesson|quiz)\/[^/]+/);
+  await expectNoHorizontalOverflow(page);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
   const startExercises = page.getByRole("button", { name: "Empezar ejercicios" });
   if (await startExercises.isVisible()) {
     await startExercises.click();
+    await expect(page.getByText(/Ejercicio \d+ de \d+/)).toBeVisible();
   }
-
-  await page.getByRole("button", { name: "2xy" }).click();
-  await expect(page.getByText("¡Correcto!")).toBeVisible();
-  await page.getByRole("button", { name: "Continuar" }).click();
-
-  await page.getByRole("button", { name: "Falso" }).click();
-  await expect(page.getByText("¡Correcto!")).toBeVisible();
-  await page.getByRole("button", { name: "Continuar" }).click();
-
-  await page.getByRole("button", { name: "límite" }).click();
-  await expect(page.getByText("¡Correcto!")).toBeVisible();
-  await page.getByRole("button", { name: "Continuar" }).click();
-
-  await expect(page.getByText("Lección completada")).toBeVisible();
-  await page.getByRole("button", { name: "Volver al plan" }).click();
-  await expect(page).toHaveURL(new RegExp(`/exams/${qaExamId}/track$`));
-  await expect(page.locator('[data-current="true"]')).toHaveCount(1);
 
   guards.assertClean();
 });

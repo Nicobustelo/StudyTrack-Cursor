@@ -1,38 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StudyTrack
 
-## Getting Started
+StudyTrack convierte materiales y parciales anteriores en un camino de estudio
+personalizado. La aplicación combina onboarding guiado, generación de contenido
+con IA, práctica, progreso, simulacros y acceso Premium por examen.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router) y React 19
+- TypeScript y Tailwind CSS 4
+- Supabase Auth, Postgres, Storage y RLS
+- OpenAI para el pipeline de análisis y generación
+- Mercado Pago para checkout y webhooks
+- PostHog para analítica de producto
+- Playwright para smoke tests E2E
+
+## Desarrollo local
+
+Requisitos: Node.js 20 o superior, npm y un proyecto Supabase.
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La aplicación queda disponible en [http://localhost:3000](http://localhost:3000).
+En Windows PowerShell, copiá el archivo con:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```powershell
+Copy-Item .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Completá como mínimo las credenciales públicas y `service_role` de Supabase.
+`OPENAI_API_KEY` es necesaria para generar planes; Mercado Pago y PostHog pueden
+dejarse vacíos durante trabajo puramente visual.
 
-## Learn More
+## Base de datos
 
-To learn more about Next.js, take a look at the following resources:
+Las migraciones viven en `supabase/migrations`. Aplicarlas es obligatorio antes
+de desplegar una versión que dependa de cambios de esquema:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+supabase link --project-ref TU_PROJECT_REF
+supabase db push
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+La migración `20260716193000_add_three_exam_access_slots.sql` implementa los tres
+cupos reales del pack “3 exámenes” y debe estar aplicada antes de desplegar el
+código que lo consume.
 
-## Deploy on Vercel
+## Comandos de calidad
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run lint
+npm run test:fixes
+npm run build
+npm run test:e2e
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+El smoke público corre sin credenciales. Para habilitar el recorrido autenticado,
+configurá `STUDYTRACK_QA_EMAIL`, `STUDYTRACK_QA_PASSWORD` y
+`STUDYTRACK_QA_EXAM_ID`. `STUDYTRACK_QA_CHECKOUT=1` habilita además la creación
+de una preferencia real de checkout, por lo que debe usarse de forma deliberada.
 
-<!-- deploy: 2026-07-10T15:51:00Z -->
+## Integraciones de producción
+
+- Configurá `NEXT_PUBLIC_APP_URL` con el dominio canónico HTTPS.
+- Agregá `/auth/callback` a los redirect URLs permitidos de Supabase Auth.
+- Configurá la URL de webhook de Mercado Pago en `/api/webhooks/mercadopago` y
+  definí `MERCADOPAGO_WEBHOOK_SECRET`.
+- Conservá `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY` y los secretos de pago
+  únicamente del lado servidor.
+
+## Flujo de deploy recomendado
+
+1. Ejecutar lint, regresiones, build y E2E público.
+2. Aplicar migraciones de Supabase.
+3. Desplegar la aplicación con las variables de entorno de producción.
+4. Verificar registro/confirmación, generación de un examen y webhook de pago.
+5. Ejecutar el smoke autenticado contra la URL desplegada.

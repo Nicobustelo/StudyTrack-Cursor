@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { hasExamPremiumAccess } from "@/lib/access";
+import { ANALYTICS_EVENTS, captureServerEvent } from "@/lib/analytics/server";
 import { createClient } from "@/lib/supabase/server";
 
 import { buildDemoTrackViewModel } from "./demo";
@@ -11,6 +12,7 @@ import type {
   TrackNodeVM,
   TrackUnitVM,
   TrackViewModel,
+  TrackLoadIssue,
 } from "./types";
 
 interface ExamRow {
@@ -57,6 +59,44 @@ interface QuizRow {
 
 const REVIEW_DUE_AFTER_DAYS = 3;
 const DAILY_CHALLENGE_XP = 15;
+
+function getErrorMessage(error: unknown): string | undefined {
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message.slice(0, 300);
+  }
+  return undefined;
+}
+
+function captureTrackLoadFailure(
+  userId: string,
+  examId: string,
+  issue: TrackLoadIssue,
+  stage: string,
+  error?: unknown,
+): void {
+  captureServerEvent(userId, ANALYTICS_EVENTS.TRACK_LOAD_FAILED, {
+    exam_id: examId,
+    issue,
+    stage,
+    error_message: getErrorMessage(error),
+  });
+}
+
+function fallbackTrack(
+  examId: string,
+  issue: TrackLoadIssue,
+  options?: Parameters<typeof buildDemoTrackViewModel>[1],
+): TrackViewModel {
+  return {
+    ...buildDemoTrackViewModel(examId, options),
+    loadIssue: issue,
+  };
+}
 
 function lessonKind(lessonType: string | null): TrackNodeKind {
   switch (lessonType) {
@@ -138,7 +178,7 @@ export async function loadTrackViewModel(examId: string): Promise<TrackViewModel
   }
 
   try {
-    const { data: exam } = await supabase
+    const { data: exam, error: examError } = await supabase
       .from("exams")
       .select(
         "id, subject_name, exam_date, target_grade, readiness_score, status, is_emergency_mode",
@@ -147,15 +187,36 @@ export async function loadTrackViewModel(examId: string): Promise<TrackViewModel
       .eq("user_id", user.id)
       .maybeSingle<ExamRow>();
 
+    if (examError) {
+      captureTrackLoadFailure(
+        user.id,
+        examId,
+        "unavailable",
+        "exam",
+        examError,
+      );
+      return fallbackTrack(examId, "unavailable");
+    }
+
     if (!exam) {
-      return buildDemoTrackViewModel(examId);
+      captureTrackLoadFailure(user.id, examId, "not_found", "exam");
+      return fallbackTrack(examId, "not_found");
     }
 
     let hasPremiumAccess = false;
+    let premiumLookupFailed = false;
     try {
       hasPremiumAccess = await hasExamPremiumAccess(user.id, examId);
-    } catch {
+    } catch (error) {
       hasPremiumAccess = false;
+      premiumLookupFailed = true;
+      captureTrackLoadFailure(
+        user.id,
+        examId,
+        "access_unavailable",
+        "premium_access",
+        error,
+      );
     }
 
     const [unitsRes, lessonsRes, progressRes, quizzesRes, activityRes] =
@@ -189,6 +250,26 @@ export async function loadTrackViewModel(examId: string): Promise<TrackViewModel
           .limit(90),
       ]);
 
+    const failedQuery = [
+      ["units", unitsRes.error],
+      ["lessons", lessonsRes.error],
+      ["progress", progressRes.error],
+      ["quizzes", quizzesRes.error],
+      ["activity", activityRes.error],
+    ].find(([, error]) => Boolean(error));
+
+    if (failedQuery) {
+      const [stage, error] = failedQuery;
+      captureTrackLoadFailure(
+        user.id,
+        examId,
+        "unavailable",
+        String(stage),
+        error,
+      );
+      return fallbackTrack(examId, "unavailable", { hasPremiumAccess });
+    }
+
     const units = (unitsRes.data ?? []) as UnitRow[];
     const lessons: LessonRow[] = (
       (lessonsRes.data ?? []) as Array<
@@ -201,6 +282,15 @@ export async function loadTrackViewModel(examId: string): Promise<TrackViewModel
 
     if (units.length === 0 || lessons.length === 0) {
       const demo = buildDemoTrackViewModel(examId, { hasPremiumAccess });
+      const generating = exam.status !== "ready";
+      if (!generating) {
+        captureTrackLoadFailure(
+          user.id,
+          examId,
+          "unavailable",
+          "content_empty",
+        );
+      }
       return {
         ...demo,
         subjectName: exam.subject_name ?? demo.subjectName,
@@ -209,7 +299,8 @@ export async function loadTrackViewModel(examId: string): Promise<TrackViewModel
           ? daysUntil(exam.exam_date)
           : demo.daysUntilExam,
         targetGrade: exam.target_grade ?? demo.targetGrade,
-        generating: exam.status !== "ready",
+        generating,
+        loadIssue: generating ? null : "unavailable",
       };
     }
 
@@ -384,11 +475,18 @@ export async function loadTrackViewModel(examId: string): Promise<TrackViewModel
       emergencyMode: Boolean(exam.is_emergency_mode) || daysUntilExam <= 3,
       isDemo: false,
       generating: !examReady,
+      loadIssue: premiumLookupFailed ? "access_unavailable" : null,
       dailyChallenge,
       units: unitVMs,
     };
-  } catch {
-    // Cualquier error inesperado degrada a demo: el track nunca se rompe.
-    return buildDemoTrackViewModel(examId);
+  } catch (error) {
+    captureTrackLoadFailure(
+      user.id,
+      examId,
+      "unavailable",
+      "unexpected",
+      error,
+    );
+    return fallbackTrack(examId, "unavailable");
   }
 }

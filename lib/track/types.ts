@@ -65,6 +65,11 @@ export interface DailyChallengeVM {
   href: string;
 }
 
+export type TrackLoadIssue =
+  | "not_found"
+  | "unavailable"
+  | "access_unavailable";
+
 export interface TrackViewModel {
   examId: string;
   subjectName: string;
@@ -82,6 +87,8 @@ export interface TrackViewModel {
   isDemo: boolean;
   /** true si el examen existe pero el pipeline sigue generando contenido. */
   generating: boolean;
+  /** Fallo recuperable que degradó parcial o totalmente la experiencia. */
+  loadIssue: TrackLoadIssue | null;
   dailyChallenge: DailyChallengeVM | null;
   units: TrackUnitVM[];
 }

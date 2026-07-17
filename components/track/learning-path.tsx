@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles, Zap } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { AlertTriangle, RefreshCw, Sparkles, Zap } from "lucide-react";
 
 import { PaywallModal } from "@/components/monetization/paywall-modal";
 import {
@@ -31,7 +33,9 @@ export function LearningPath({
   vm,
   initialPaywallOpen = false,
 }: LearningPathProps) {
+  const router = useRouter();
   const [paywallOpen, setPaywallOpen] = useState(initialPaywallOpen);
+  const [refreshing, startRefresh] = useTransition();
   const [lockedHintId, setLockedHintId] = useState<string | null>(null);
   const hintTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const viewTracked = useRef(false);
@@ -90,7 +94,46 @@ export function LearningPath({
 
   return (
     <div ref={rootRef} className="flex flex-col gap-5 px-4 pt-4">
-      {vm.isDemo || vm.generating ? (
+      {vm.loadIssue ? (
+        <div
+          role="alert"
+          className="flex flex-col gap-3 rounded-xl border border-accent-orange/30 bg-accent-orange/10 px-3 py-3 text-[#9a480b] sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex min-w-0 items-start gap-2.5">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <p className="text-xs font-semibold leading-relaxed">
+              {vm.loadIssue === "not_found"
+                ? "No encontramos este examen. Te mostramos un camino de ejemplo para que puedas seguir explorando."
+                : vm.loadIssue === "access_unavailable"
+                  ? "No pudimos verificar tu acceso Premium. Reintentá antes de abrir contenido bloqueado."
+                  : "No pudimos cargar todo tu plan. Te mostramos un ejemplo temporal mientras recuperamos la conexión."}
+            </p>
+          </div>
+          {vm.loadIssue === "not_found" ? (
+            <Link
+              href="/exams"
+              className="shrink-0 self-start rounded-lg bg-white/75 px-3 py-2 text-xs font-extrabold shadow-sm transition-colors hover:bg-white sm:self-auto"
+            >
+              Ver mis exámenes
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled={refreshing}
+              onClick={() => {
+                startRefresh(() => router.refresh());
+              }}
+              className="flex shrink-0 items-center gap-1.5 self-start rounded-lg bg-white/75 px-3 py-2 text-xs font-extrabold shadow-sm transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-60 sm:self-auto"
+            >
+              <RefreshCw
+                className={cn("size-3.5", refreshing && "animate-spin")}
+                aria-hidden
+              />
+              {refreshing ? "Reintentando…" : "Reintentar"}
+            </button>
+          )}
+        </div>
+      ) : vm.isDemo || vm.generating ? (
         <p
           role="status"
           className={cn(

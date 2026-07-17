@@ -46,6 +46,7 @@ export const ANALYTICS_EVENTS = {
   ANALYSIS_COMPLETED: "analysis_completed",
   ANALYSIS_FAILED: "analysis_failed",
   TRACK_GENERATED: "track_generated",
+  TRACK_LOAD_FAILED: "track_load_failed",
   TRACK_VIEWED: "track_viewed",
   LESSON_STARTED: "lesson_started",
   LESSON_COMPLETED: "lesson_completed",
@@ -112,6 +113,10 @@ export type EventPropertiesMap = {
   [ANALYTICS_EVENTS.ANALYSIS_FAILED]: PipelineFailureProperties;
   [ANALYTICS_EVENTS.TRACK_GENERATED]: AnalyticsProperties & {
     exam_id: string;
+  };
+  [ANALYTICS_EVENTS.TRACK_LOAD_FAILED]: PipelineFailureProperties & {
+    exam_id: string;
+    issue: "not_found" | "unavailable" | "access_unavailable";
   };
   [ANALYTICS_EVENTS.TRACK_VIEWED]: AnalyticsProperties & {
     exam_id: string;

@@ -4,6 +4,8 @@ export interface PlanDefinition {
   id: PlanType;
   name: string;
   description: string;
+  accessSummary: string;
+  checkoutLabel: string;
   priceArs: number;
   currency: "ARS";
   badge?: string;
@@ -25,7 +27,6 @@ export const PAYWALL_COPY = {
   title: "Desbloqueá tu plan completo para este examen.",
   subtitle:
     "Ya creamos tu plan de estudio. Desbloqueá todas las unidades, repasos, simulacros y ejercicios calibrados con tus exámenes anteriores.",
-  cta: "Desbloquear este examen",
 } as const;
 
 const DEFAULT_PRICES: Record<PlanType, number> = {
@@ -46,6 +47,8 @@ export const PLANS: Record<PlanType, PlanDefinition> = {
     id: "one_exam",
     name: "1 examen",
     description: "Para preparar una materia puntual.",
+    accessSummary: "1 plan completo, sin vencimiento",
+    checkoutLabel: "Desbloquear 1 examen",
     priceArs: readPrice("NEXT_PUBLIC_PRICE_ONE_EXAM", DEFAULT_PRICES.one_exam),
     currency: "ARS",
   },
@@ -53,6 +56,8 @@ export const PLANS: Record<PlanType, PlanDefinition> = {
     id: "three_exams",
     name: "3 exámenes",
     description: "Para época de parciales/finales.",
+    accessSummary: "Hasta 3 planes completos, sin vencimiento",
+    checkoutLabel: "Desbloquear pack de 3",
     priceArs: readPrice(
       "NEXT_PUBLIC_PRICE_THREE_EXAMS",
       DEFAULT_PRICES.three_exams,
@@ -65,6 +70,8 @@ export const PLANS: Record<PlanType, PlanDefinition> = {
     id: "semester",
     name: "Pack semestre",
     description: "Para preparar varias materias durante el semestre.",
+    accessSummary: "Todos tus planes durante 6 meses",
+    checkoutLabel: "Desbloquear semestre",
     priceArs: readPrice("NEXT_PUBLIC_PRICE_SEMESTER", DEFAULT_PRICES.semester),
     currency: "ARS",
   },

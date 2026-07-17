@@ -34,7 +34,7 @@ export function MockExamsList({
 
   return (
     <>
-      <ul className="flex flex-col gap-3">
+      <ul className="grid gap-3 md:grid-cols-2">
         {mockExams.map((mock) => {
           const locked = "premium" in mock && mock.premium && !hasPremium;
           return (

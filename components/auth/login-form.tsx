@@ -10,7 +10,11 @@ import { Label } from "@/components/ui/label";
 import { humanizeAuthError } from "@/lib/auth/errors";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-export function LoginForm() {
+type LoginFormProps = {
+  nextPath?: string | null;
+};
+
+export function LoginForm({ nextPath }: LoginFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,7 +49,9 @@ export function LoginForm() {
         .select("id", { count: "exact", head: true })
         .eq("user_id", data.user.id);
 
-      router.push((count ?? 0) > 0 ? "/dashboard" : "/onboarding");
+      router.push(
+        nextPath ?? ((count ?? 0) > 0 ? "/dashboard" : "/onboarding"),
+      );
       router.refresh();
     } catch {
       setError("No pudimos conectar con el servidor. Revisá tu conexión.");
@@ -70,7 +76,15 @@ export function LoginForm() {
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Contraseña</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="password">Contraseña</Label>
+          <Link
+            href="/forgot-password"
+            className="text-xs font-bold text-brand-dark hover:text-brand"
+          >
+            ¿La olvidaste?
+          </Link>
+        </div>
         <Input
           id="password"
           type="password"

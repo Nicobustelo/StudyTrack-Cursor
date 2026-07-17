@@ -61,7 +61,7 @@ export function Hero() {
           </p>
         </div>
 
-        <div className="shrink-0 lg:pr-6">
+        <div className="w-full max-w-[290px] shrink-0 lg:pr-6">
           <PhoneMockup />
         </div>
       </PageContainer>

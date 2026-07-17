@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { CtaLink } from "@/components/landing/cta-link";
@@ -45,6 +45,10 @@ export function PricingPreview() {
               </p>
               <p className="mt-1 text-xs font-medium text-ink-muted">
                 Pago único con Mercado Pago
+              </p>
+              <p className="mt-4 flex items-start gap-2 text-sm font-bold text-ink">
+                <Check className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
+                {plan.accessSummary}
               </p>
             </div>
           ))}

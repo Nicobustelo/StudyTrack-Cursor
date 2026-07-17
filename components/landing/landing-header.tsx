@@ -8,8 +8,8 @@ import { CtaLink } from "@/components/landing/cta-link";
 export function LandingHeader() {
   return (
     <StickyHeader>
-      <PageContainer size="wide" className="flex h-16 items-center justify-between gap-4">
-        <Logo />
+      <PageContainer size="wide" className="flex h-16 items-center justify-between gap-3">
+        <Logo compactOnMobile />
         <nav className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/pricing"
@@ -28,6 +28,7 @@ export function LandingHeader() {
             ctaId="header_primary"
             location="landing_header"
             label="Crear mi plan de estudio"
+            mobileLabel="Crear plan"
             size="sm"
           />
         </nav>

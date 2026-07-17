@@ -28,7 +28,7 @@ interface TrackHeaderProps {
 export function TrackHeader({ vm }: TrackHeaderProps) {
   return (
     <StickyHeader>
-      <div className="mx-auto w-full max-w-md px-4 py-3">
+      <div className="mx-auto w-full max-w-md px-4 py-3 lg:max-w-3xl">
         <div className="flex items-center justify-between gap-2">
           <h1 className="min-w-0 truncate text-lg font-extrabold leading-tight text-ink">
             {vm.subjectName}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { getAuthCallbackUrl, getRequestOrigin } from "@/lib/app-url";
 import { humanizeAuthError } from "@/lib/auth/errors";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 interface SignupBody {
@@ -31,13 +31,17 @@ export async function POST(request: Request) {
       );
     }
 
-    const admin = createAdminClient();
-    const { data: created, error: createError } =
-      await admin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-      });
+    const supabase = await createClient();
+    const callbackUrl = new URL(
+      getAuthCallbackUrl(getRequestOrigin(request)),
+    );
+    callbackUrl.searchParams.set("next", "/onboarding");
+
+    const { data: created, error: createError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: callbackUrl.toString() },
+    });
 
     if (createError) {
       return NextResponse.json(
@@ -53,20 +57,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    return NextResponse.json({
+      ok: true,
+      requiresEmailConfirmation: !created.session,
     });
-
-    if (signInError) {
-      return NextResponse.json(
-        { error: humanizeAuthError(signInError.message, signInError.code) },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json(
       { error: "No pudimos conectar con el servidor. Revisá tu conexión." },
