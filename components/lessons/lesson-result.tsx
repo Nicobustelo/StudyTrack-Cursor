@@ -87,7 +87,11 @@ export function LessonResult({
 
       <div className="flex flex-col gap-3 pt-2">
         {passed && nextLessonId ? (
-          <Button size="lg" className="w-full" render={<Link href={`/exams/${examId}/lesson/${nextLessonId}`} />}>
+          <Button
+            size="lg"
+            className="h-auto min-h-13 w-full whitespace-normal py-3 text-center leading-snug"
+            render={<Link href={`/exams/${examId}/lesson/${nextLessonId}`} />}
+          >
             Siguiente: {nextLessonTitle ?? "Lección"}
           </Button>
         ) : null}
@@ -135,7 +139,7 @@ function StatCard({
 }) {
   return (
     <Card size="sm" className="text-center">
-      <CardContent className="flex flex-col gap-0.5 py-4">
+      <CardContent className="flex min-w-0 flex-col gap-0.5 px-2 py-4 sm:px-4">
         <span className="text-xs text-ink-muted">{label}</span>
         <span
           className={cn(

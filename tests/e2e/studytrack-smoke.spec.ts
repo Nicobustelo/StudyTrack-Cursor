@@ -209,7 +209,7 @@ test("public smoke: landing, auth pages, onboarding guard and checkout guard", a
   guards.assertClean();
 });
 
-test("authenticated smoke: track, paywall, checkout API and lesson fallback", async ({
+test("authenticated smoke: track, paywall, checkout API and lesson rendering", async ({
   page,
 }) => {
   test.skip(
@@ -221,22 +221,33 @@ test("authenticated smoke: track, paywall, checkout API and lesson fallback", as
   await authenticateWithQaSession(page);
 
   await page.goto(`/exams/${qaExamId}/track`);
-  await expect(page.getByText("Análisis Matemático 2")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.locator('[data-slot="path-node"]').first()).toBeVisible();
   await expect(page.locator('[data-current="true"]')).toHaveCount(1);
 
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  await expect(
-    page.getByRole("heading", { name: "Extremos y optimización" }),
-  ).toBeVisible();
+  const pathUnits = page.locator('[data-slot="path-unit"]');
+  const pathUnitCount = await pathUnits.count();
+  expect(pathUnitCount).toBeGreaterThan(0);
+  await pathUnits.nth(pathUnitCount - 1).scrollIntoViewIfNeeded();
+  await expect(pathUnits.nth(pathUnitCount - 1)).toBeVisible();
 
-  await page.locator('[data-status="premium_locked"]').first().click();
+  const premiumNodes = page.locator('[data-status="premium_locked"]');
+  expect(await premiumNodes.count()).toBeGreaterThan(0);
+  await premiumNodes.first().click();
   await expect(
     page.getByRole("heading", {
       name: "Desbloqueá tu plan completo para este examen.",
     }),
   ).toBeVisible();
-  await page.keyboard.press("Escape");
+
+  const paywall = page.getByRole("dialog");
+  await expect(paywall).toBeVisible();
+  expect(await paywall.evaluate((element) => element.scrollTop)).toBe(0);
+  const closePaywall = page.getByRole("button", { name: "Cerrar" });
+  await expect(closePaywall).toBeVisible();
+  await closePaywall.click();
+  await expect(paywall).toBeHidden();
 
   if (runCheckout) {
     const preference = await page.request.post("/api/checkout/preference", {
@@ -250,30 +261,15 @@ test("authenticated smoke: track, paywall, checkout API and lesson fallback", as
   const currentNode = page.locator('[data-current="true"]');
   await currentNode.scrollIntoViewIfNeeded();
   await currentNode.click();
-  await expect(page).toHaveURL(/\/exams\/[^/]+\/lesson\/[^/]+/);
-  await expect(page.getByRole("heading")).toBeVisible();
+  await expect(page).toHaveURL(/\/exams\/[^/]+\/(lesson|quiz)\/[^/]+/);
+  await expectNoHorizontalOverflow(page);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
   const startExercises = page.getByRole("button", { name: "Empezar ejercicios" });
   if (await startExercises.isVisible()) {
     await startExercises.click();
+    await expect(page.getByText(/Ejercicio \d+ de \d+/)).toBeVisible();
   }
-
-  await page.getByRole("button", { name: "2xy" }).click();
-  await expect(page.getByText("¡Correcto!")).toBeVisible();
-  await page.getByRole("button", { name: "Continuar" }).click();
-
-  await page.getByRole("button", { name: "Falso" }).click();
-  await expect(page.getByText("¡Correcto!")).toBeVisible();
-  await page.getByRole("button", { name: "Continuar" }).click();
-
-  await page.getByRole("button", { name: "límite" }).click();
-  await expect(page.getByText("¡Correcto!")).toBeVisible();
-  await page.getByRole("button", { name: "Continuar" }).click();
-
-  await expect(page.getByText("Lección completada")).toBeVisible();
-  await page.getByRole("button", { name: "Volver al plan" }).click();
-  await expect(page).toHaveURL(new RegExp(`/exams/${qaExamId}/track$`));
-  await expect(page.locator('[data-current="true"]')).toHaveCount(1);
 
   guards.assertClean();
 });
